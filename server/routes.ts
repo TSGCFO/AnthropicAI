@@ -1,5 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { setupWebSocketServer } from './lib/wsHandler';
+import { generateCodeSuggestion, analyzeCode, explainCode } from './lib/codeai';
 import { db } from "@db";
 import { conversations, messages } from "@db/schema";
 import { generateChatResponse } from "./lib/anthropic";
@@ -7,6 +9,45 @@ import { eq, desc, asc } from "drizzle-orm";
 
 export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
+
+  // Setup WebSocket server
+  const wss = setupWebSocketServer(httpServer);
+
+  // REST endpoints for code assistance
+  app.post("/api/code/suggest", async (req, res) => {
+    try {
+      const { code, cursor, language, file } = req.body;
+      const suggestion = await generateCodeSuggestion({
+        currentFile: file,
+        fileContent: code,
+        cursor,
+        language,
+      });
+      res.json(suggestion);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/code/analyze", async (req, res) => {
+    try {
+      const { code } = req.body;
+      const analysis = await analyzeCode(code);
+      res.json(analysis);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/code/explain", async (req, res) => {
+    try {
+      const { code } = req.body;
+      const explanation = await explainCode(code);
+      res.json({ explanation });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
 
   // Create a new conversation
   app.post("/api/conversations", async (req, res) => {
@@ -57,7 +98,7 @@ export function registerRoutes(app: Express): Server {
     try {
       const updated = await db
         .update(conversations)
-        .set({ 
+        .set({
           title,
           updatedAt: new Date(),
         })

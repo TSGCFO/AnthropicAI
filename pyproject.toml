@@ -1,0 +1,13 @@
+[project]
+name = "repl-nix-anthropicai"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.11"
+dependencies = [
+    "channels>=4.2.0",
+    "channels-redis>=4.2.1",
+    "django>=5.1.4",
+    "django-cors-headers>=4.6.0",
+    "openai>=1.59.3",
+    "psycopg2-binary>=2.9.10",
+]
