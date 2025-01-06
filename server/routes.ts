@@ -13,6 +13,54 @@ export function registerRoutes(app: Express): Server {
   // Setup WebSocket server
   const wss = setupWebSocketServer(httpServer);
 
+  // Test endpoint to demonstrate code generation
+  app.post("/api/code/test-generation", async (req, res) => {
+    try {
+      // Sample financial transaction endpoint pattern
+      const code_template = `
+      @require_http_methods(["POST"])
+      @transaction.atomic
+      def process_financial_transaction(request):
+          """Process a financial transaction with proper validation and security."""
+          try:
+              data = json.loads(request.body)
+
+              # Add validation logic here
+
+              # Add transaction processing here
+
+              # Add audit logging here
+
+              return JsonResponse({"status": "success"})
+          except json.JSONDecodeError:
+              return JsonResponse({"error": "Invalid JSON"}, status=400)
+          except Exception as e:
+              logger.error(f"Transaction processing error: {str(e)}")
+              return JsonResponse({"error": "Internal server error"}, status=500)
+      `;
+
+      // Generate code using our AI service
+      const suggestion = await generateCodeSuggestion({
+        currentFile: 'transaction_api.py',
+        fileContent: code_template,
+        cursor: code_template.length,
+        language: 'python',
+      });
+
+      // Also get code analysis
+      const analysis = await analyzeCode(suggestion.suggestion);
+
+      res.json({
+        generated_code: suggestion,
+        code_analysis: analysis
+      });
+
+    } catch (error) {
+      console.error('Test generation error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // REST endpoints for code assistance
   app.post("/api/code/suggest", async (req, res) => {
     try {
