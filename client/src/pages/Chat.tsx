@@ -4,9 +4,16 @@ import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { Conversation, Message } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Info } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export function Chat() {
   const queryClient = useQueryClient();
@@ -56,7 +63,7 @@ export function Chat() {
         content,
         createdAt: new Date().toISOString(),
       };
-      
+
       queryClient.setQueryData<Message[]>(
         [`/api/conversations/${currentConversation.id}/messages`],
         (old = []) => [...old, tempUserMessage]
@@ -78,7 +85,7 @@ export function Chat() {
       if (!reader) throw new Error("No response reader");
 
       let assistantMessage = "";
-      
+
       // Add temporary assistant message
       const tempAssistantMessage: Message = {
         id: Date.now() + 1,
@@ -108,7 +115,7 @@ export function Chat() {
             try {
               const { text } = JSON.parse(data);
               assistantMessage += text;
-              
+
               // Update temporary assistant message
               queryClient.setQueryData<Message[]>(
                 [`/api/conversations/${currentConversation.id}/messages`],
@@ -149,8 +156,13 @@ export function Chat() {
 
   return (
     <div className="flex flex-col h-screen">
-      <header className="flex items-center justify-between p-4 border-b">
-        <h1 className="text-xl font-semibold">AI Chat</h1>
+      <header className="flex items-center justify-between p-4 border-b bg-background">
+        <div>
+          <h1 className="text-2xl font-semibold">Project Assistant</h1>
+          <p className="text-sm text-muted-foreground">
+            Your specialized AI assistant for this project
+          </p>
+        </div>
         <Button
           variant="outline"
           size="icon"
@@ -160,6 +172,33 @@ export function Chat() {
           <Plus className="h-4 w-4" />
         </Button>
       </header>
+
+      {messages.length === 0 && (
+        <Card className="m-4">
+          <CardHeader>
+            <CardTitle>Welcome to Your Project Assistant</CardTitle>
+            <CardDescription>
+              I'm here to help you with this project. I can:
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2">
+              <li className="flex items-start gap-2">
+                <Info className="h-5 w-5 mt-0.5 text-muted-foreground" />
+                <span>Understand and respond to your project-related questions</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Info className="h-5 w-5 mt-0.5 text-muted-foreground" />
+                <span>Provide relevant examples and explanations</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Info className="h-5 w-5 mt-0.5 text-muted-foreground" />
+                <span>Help you understand project-specific concepts</span>
+              </li>
+            </ul>
+          </CardContent>
+        </Card>
+      )}
 
       <ScrollArea className="flex-1">
         <div className="flex flex-col gap-2 py-4">

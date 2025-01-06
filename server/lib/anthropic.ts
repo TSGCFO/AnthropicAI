@@ -13,10 +13,27 @@ const anthropic = new Anthropic({
 
 export async function generateChatResponse(messages: { role: string; content: string }[]) {
   try {
-    const formattedMessages = messages.map(msg => ({
-      role: msg.role === 'user' ? 'user' : 'assistant',
-      content: msg.content
-    }));
+    // Add system message to define the assistant's role
+    const systemMessage = {
+      role: 'assistant',
+      content: `You are an AI assistant specialized for this specific project. Your role is to:
+1. Understand natural language input and provide tailored responses based on the project context
+2. Maintain a friendly and professional tone
+3. Focus on providing accurate, project-relevant information
+4. Ask for clarification when needed
+5. Use project-specific terminology appropriately
+6. Provide examples that relate directly to the project context`
+    };
+
+    const formattedMessages = [
+      // Add system message first
+      systemMessage,
+      // Then add user conversation history
+      ...messages.map(msg => ({
+        role: msg.role === 'user' ? 'user' : 'assistant',
+        content: msg.content
+      }))
+    ];
 
     const response = await anthropic.messages.create({
       model: MODEL,
