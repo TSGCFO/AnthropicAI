@@ -2,7 +2,7 @@ from django.http import JsonResponse, StreamingHttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import json
-from .services import generate_code_suggestion, analyze_code, explain_code, generate_chat_response
+from .services import generate_code_suggestion, analyze_code, explain_code
 from django.core.exceptions import ValidationError
 import logging
 
@@ -14,12 +14,23 @@ def code_suggestion(request):
     """Generate code suggestions for the editor."""
     try:
         data = json.loads(request.body)
+
+        # Extract the context from LedgerLink's codebase
+        file_path = data.get('file', '')
+        code_context = data.get('code', '')
+        cursor_position = data.get('cursor', 0)
+
+        # Generate suggestion using Claude
         suggestion = generate_code_suggestion(
-            code=data.get('code', ''),
-            cursor=data.get('cursor', 0),
-            language=data.get('language', 'python'),
-            file_path=data.get('file', '')
+            code=code_context,
+            cursor=cursor_position,
+            language='python',  # We're focusing on Python/Django for LedgerLink
+            file_path=file_path
         )
+
+        # Log the suggestion for monitoring
+        logger.info(f"Generated suggestion for {file_path}")
+
         return JsonResponse(suggestion)
     except Exception as e:
         logger.error(f"Error generating code suggestion: {str(e)}")
@@ -31,7 +42,13 @@ def code_analysis(request):
     """Analyze code for improvements and potential issues."""
     try:
         data = json.loads(request.body)
+
+        # Analyze the code snippet
         analysis = analyze_code(data.get('code', ''))
+
+        # Log the analysis request
+        logger.info("Code analysis performed successfully")
+
         return JsonResponse(analysis)
     except Exception as e:
         logger.error(f"Error analyzing code: {str(e)}")
@@ -43,7 +60,14 @@ def code_explanation(request):
     """Generate natural language explanations for code."""
     try:
         data = json.loads(request.body)
-        explanation = explain_code(data.get('code', ''))
+        code = data.get('code', '')
+
+        # Get an explanation of the code
+        explanation = explain_code(code)
+
+        # Log the explanation request
+        logger.info("Code explanation generated successfully")
+
         return JsonResponse({'explanation': explanation})
     except Exception as e:
         logger.error(f"Error explaining code: {str(e)}")
