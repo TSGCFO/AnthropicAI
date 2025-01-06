@@ -8,4 +8,5 @@ urlpatterns = [
     path('code/analyze/', views.code_analysis, name='code_analysis'),
     path('code/explain/', views.code_explanation, name='code_explanation'),
     path('chat/message/', views.chat_message, name='chat_message'),
+    path('code/test-generation/', views.test_code_generation, name='test_code_generation'),
 ]

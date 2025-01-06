@@ -10,6 +10,54 @@ logger = logging.getLogger(__name__)
 
 @csrf_exempt
 @require_http_methods(["POST"])
+def test_code_generation(request):
+    """Test endpoint to demonstrate AI code generation capabilities."""
+    try:
+        # Sample financial transaction endpoint pattern
+        code_template = """
+        @require_http_methods(["POST"])
+        @transaction.atomic
+        def process_financial_transaction(request):
+            \"\"\"Process a financial transaction with proper validation and security.\"\"\"
+            try:
+                data = json.loads(request.body)
+
+                # Add validation logic here
+
+                # Add transaction processing here
+
+                # Add audit logging here
+
+                return JsonResponse({"status": "success"})
+            except json.JSONDecodeError:
+                return JsonResponse({"error": "Invalid JSON"}, status=400)
+            except Exception as e:
+                logger.error(f"Transaction processing error: {str(e)}")
+                return JsonResponse({"error": "Internal server error"}, status=500)
+        """
+
+        # Generate code using our AI service
+        suggestion = generate_code_suggestion(
+            code=code_template,
+            cursor=len(code_template),
+            language='python',
+            file_path='transaction_api.py'
+        )
+
+        # Also get code analysis
+        analysis = analyze_code(suggestion['suggestion'])
+
+        return JsonResponse({
+            'generated_code': suggestion,
+            'code_analysis': analysis
+        })
+
+    except Exception as e:
+        logger.error(f"Error in test code generation: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+@csrf_exempt
+@require_http_methods(["POST"])
 def code_suggestion(request):
     """Generate code suggestions for the editor."""
     try:
