@@ -76,11 +76,11 @@ export function registerRoutes(app: Express): Server {
 
     try {
       // Save user message
-      await db.insert(messages).values({
+      const userMessage = await db.insert(messages).values({
         conversationId,
         role: "user",
         content,
-      });
+      }).returning();
 
       // Update conversation timestamp
       await db
@@ -100,49 +100,57 @@ export function registerRoutes(app: Express): Server {
         content: msg.content,
       }));
 
-      // Get streaming response
-      const response = await generateChatResponse(formattedMessages);
-
-      // Stream response to client
+      // Setup SSE
       res.setHeader('Content-Type', 'text/event-stream');
       res.setHeader('Cache-Control', 'no-cache');
       res.setHeader('Connection', 'keep-alive');
 
-      let fullResponse = '';
+      try {
+        const stream = await generateChatResponse(formattedMessages);
+        let fullResponse = '';
 
-      for await (const chunk of response) {
-        const text = chunk.content[0]?.text || '';
-        fullResponse += text;
-        res.write(`data: ${JSON.stringify({ text })}\n\n`);
-      }
-
-      // Save assistant message
-      await db.insert(messages).values({
-        conversationId,
-        role: "assistant",
-        content: fullResponse,
-      });
-
-      // Generate and update conversation title if it's the first message
-      if (history.length <= 1) {
-        const titleResponse = await generateChatResponse([
-          { role: 'user', content: `Based on this message: "${content}", generate a very short title (max 6 words) that captures the main topic.` }
-        ]);
-
-        let title = '';
-        for await (const chunk of titleResponse) {
-          title += chunk.content[0]?.text || '';
+        for await (const chunk of stream) {
+          if (chunk.type === 'content_block_delta') {
+            const text = chunk.delta.text;
+            fullResponse += text;
+            res.write(`data: ${JSON.stringify({ text })}\n\n`);
+          }
         }
 
-        await db
-          .update(conversations)
-          .set({ title: title.slice(0, 100) })
-          .where(eq(conversations.id, conversationId));
-      }
+        // Save assistant message
+        await db.insert(messages).values({
+          conversationId,
+          role: "assistant",
+          content: fullResponse,
+        });
 
-      res.write('data: [DONE]\n\n');
-      res.end();
+        // Generate and update conversation title if it's the first message
+        if (history.length <= 1) {
+          const titleStream = await generateChatResponse([
+            { role: 'user', content: `Based on this message: "${content}", generate a very short title (max 6 words) that captures the main topic.` }
+          ]);
+
+          let title = '';
+          for await (const chunk of titleStream) {
+            if (chunk.type === 'content_block_delta') {
+              title += chunk.delta.text;
+            }
+          }
+
+          await db
+            .update(conversations)
+            .set({ title: title.slice(0, 100) })
+            .where(eq(conversations.id, conversationId));
+        }
+
+        res.write('data: [DONE]\n\n');
+        res.end();
+      } catch (error) {
+        console.error('Streaming error:', error);
+        throw error;
+      }
     } catch (error) {
+      console.error('Request error:', error);
       res.status(500).json({ error: "Failed to process message" });
     }
   });

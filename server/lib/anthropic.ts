@@ -13,10 +13,15 @@ const anthropic = new Anthropic({
 
 export async function generateChatResponse(messages: { role: string; content: string }[]) {
   try {
+    const formattedMessages = messages.map(msg => ({
+      role: msg.role === 'user' ? 'user' : 'assistant',
+      content: msg.content
+    }));
+
     const response = await anthropic.messages.create({
       model: MODEL,
       max_tokens: 2048,
-      messages: messages,
+      messages: formattedMessages,
       stream: true,
     });
 
