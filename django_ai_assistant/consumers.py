@@ -48,30 +48,28 @@ class CodeAssistantConsumer(AsyncWebsocketConsumer):
             language=content.get('language', 'python'),
             file_path=content.get('file', '')
         )
-        
+
         # Store suggestion in database
         CodeSuggestion.objects.create(
-            user=self.scope['user'],
             file_path=content.get('file', ''),
             code_snippet=content.get('code', ''),
             suggestion=suggestion['suggestion'],
             confidence=suggestion['confidence'],
             language=content.get('language', 'python')
         )
-        
+
         return suggestion
 
     @database_sync_to_async
     def _handle_analysis(self, content):
         analysis = analyze_code(content.get('code', ''))
-        
+
         # Store analysis in database
         CodeAnalysis.objects.create(
-            user=self.scope['user'],
             code_snippet=content.get('code', ''),
             suggestions=analysis['suggestions'],
             improvements=analysis['improvements'],
             security_concerns=analysis['security']
         )
-        
+
         return analysis

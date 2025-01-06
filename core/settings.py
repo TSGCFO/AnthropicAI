@@ -20,9 +20,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'channels',
-    'corsheaders',
-    'django_ai_assistant',
+    'django_ai_assistant.apps.DjangoAiAssistantConfig',  # Add our AI assistant app
+    'channels',  # For WebSocket support
+    'corsheaders',  # For CORS support
 ]
 
 MIDDLEWARE = [
@@ -104,6 +104,5 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5000",
 ]
 
-# API Keys
-OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+# Add Anthropic API key
 ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY')
