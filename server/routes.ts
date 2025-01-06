@@ -10,45 +10,52 @@ import { eq, desc, asc } from "drizzle-orm";
 export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
 
-  // Setup WebSocket server
+  // Setup WebSocket server for real-time code assistance
   const wss = setupWebSocketServer(httpServer);
 
-  // Test endpoint to demonstrate code generation
+  // Test endpoint to demonstrate enhanced code generation
   app.post("/api/code/test-generation", async (req, res) => {
     try {
-      // Sample financial transaction endpoint pattern
+      // Example: Financial transaction processing with comprehensive validation
       const code_template = `
-      @require_http_methods(["POST"])
-      @transaction.atomic
-      def process_financial_transaction(request):
-          """Process a financial transaction with proper validation and security."""
-          try:
-              data = json.loads(request.body)
+from django.db import transaction
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
+from .models import Transaction, Account, AuditLog
+from .validators import validate_transaction
+import logging
 
-              # Add validation logic here
+logger = logging.getLogger(__name__)
 
-              # Add transaction processing here
+@csrf_exempt
+@require_http_methods(["POST"])
+@transaction.atomic
+def process_financial_transaction(request):
+    """
+    Process a financial transaction with comprehensive validation and security measures.
+    Implements double-entry accounting principles and maintains audit logs.
+    """
+    try:
+        # Implementation needed here
+        pass
 
-              # Add audit logging here
-
-              return JsonResponse({"status": "success"})
-          except json.JSONDecodeError:
-              return JsonResponse({"error": "Invalid JSON"}, status=400)
-          except Exception as e:
-              logger.error(f"Transaction processing error: {str(e)}")
-              return JsonResponse({"error": "Internal server error"}, status=500)
+    except Exception as e:
+        logger.error(f"Transaction processing error: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)
       `;
 
-      // Generate code using our AI service
+      // Generate code using our enhanced AI service
       const suggestion = await generateCodeSuggestion({
-        currentFile: 'transaction_api.py',
+        currentFile: 'transactions/views.py',
         fileContent: code_template,
         cursor: code_template.length,
         language: 'python',
+        projectContext: 'LedgerLink financial management system requiring secure transaction handling'
       });
 
-      // Also get code analysis
-      const analysis = await analyzeCode(suggestion.suggestion);
+      // Get comprehensive code analysis
+      const analysis = await analyzeCode(suggestion.suggestion || code_template);
 
       res.json({
         generated_code: suggestion,
@@ -57,7 +64,7 @@ export function registerRoutes(app: Express): Server {
 
     } catch (error) {
       console.error('Test generation error:', error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
@@ -73,7 +80,7 @@ export function registerRoutes(app: Express): Server {
       });
       res.json(suggestion);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
@@ -83,7 +90,7 @@ export function registerRoutes(app: Express): Server {
       const analysis = await analyzeCode(code);
       res.json(analysis);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
@@ -93,7 +100,7 @@ export function registerRoutes(app: Express): Server {
       const explanation = await explainCode(code);
       res.json({ explanation });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 

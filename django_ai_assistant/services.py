@@ -27,6 +27,9 @@ def generate_code_suggestion(
         Context:
         - LedgerLink is a financial management and accounting system
         - Uses Django for backend with RESTful APIs
+        - Focuses on secure financial transactions and data handling
+        - Implements comprehensive audit logging
+        - Uses PostgreSQL for data persistence
         - Follows Django best practices and design patterns
         - Emphasizes clean code and maintainability
 
@@ -38,13 +41,15 @@ def generate_code_suggestion(
 
         Please provide a completion that:
         1. Matches LedgerLink's existing coding style and patterns
-        2. Follows Django best practices
-        3. Includes proper error handling
-        4. Has comprehensive docstrings
+        2. Follows Django best practices for financial systems
+        3. Includes proper error handling and validation
+        4. Has comprehensive docstrings and comments
         5. Includes relevant imports
-        6. Considers security best practices
-        7. Includes any necessary database migrations
-        8. Adds appropriate logging
+        6. Considers security best practices for financial data
+        7. Includes necessary database migrations
+        8. Adds appropriate audit logging
+        9. Implements proper transaction management
+        10. Validates financial calculations and operations
 
         Respond in JSON format with:
         {{
@@ -52,7 +57,9 @@ def generate_code_suggestion(
             "confidence": 0.0-1.0,
             "explanation": "brief explanation of the suggestion",
             "related_files": ["list of files that might need updates"],
-            "tests": "suggested test cases for the code"
+            "tests": "suggested test cases for the code",
+            "security_considerations": ["list of security aspects considered"],
+            "audit_points": ["list of audit logging points"]
         }}
         """
 
@@ -73,7 +80,9 @@ def generate_code_suggestion(
                 "confidence": 0.7,
                 "explanation": "Generated code suggestion",
                 "related_files": [],
-                "tests": "No test cases generated"
+                "tests": "No test cases generated",
+                "security_considerations": [],
+                "audit_points": []
             }
 
         return result
@@ -84,7 +93,9 @@ def generate_code_suggestion(
             "confidence": 0.0,
             "explanation": f"Error: {str(e)}",
             "related_files": [],
-            "tests": ""
+            "tests": "",
+            "security_considerations": [],
+            "audit_points": []
         }
 
 def analyze_code(code: str) -> Dict[str, List[str]]:
@@ -103,6 +114,8 @@ def analyze_code(code: str) -> Dict[str, List[str]]:
         6. Scalability considerations
         7. Code maintainability suggestions
         8. Integration points with other LedgerLink components
+        9. Transaction safety analysis
+        10. Audit logging completeness
 
         Format the response as:
         {{
@@ -111,7 +124,9 @@ def analyze_code(code: str) -> Dict[str, List[str]]:
             "security": ["list", "of", "security", "concerns"],
             "patterns": ["list", "of", "detected", "patterns"],
             "database_impact": ["list", "of", "database", "considerations"],
-            "api_considerations": ["list", "of", "api", "design", "suggestions"]
+            "api_considerations": ["list", "of", "api", "design", "suggestions"],
+            "financial_safety": ["list", "of", "financial", "safety", "checks"],
+            "audit_completeness": ["list", "of", "audit", "logging", "gaps"]
         }}"""
 
         response = anthropic.messages.create(
@@ -131,7 +146,9 @@ def analyze_code(code: str) -> Dict[str, List[str]]:
                 "security": [],
                 "patterns": [],
                 "database_impact": [],
-                "api_considerations": []
+                "api_considerations": [],
+                "financial_safety": [],
+                "audit_completeness": []
             }
     except Exception as e:
         print(f"Error analyzing code: {str(e)}")
@@ -141,7 +158,9 @@ def analyze_code(code: str) -> Dict[str, List[str]]:
             "security": [],
             "patterns": [],
             "database_impact": [],
-            "api_considerations": []
+            "api_considerations": [],
+            "financial_safety": [],
+            "audit_completeness": []
         }
 
 def explain_code(code: str) -> str:
@@ -159,7 +178,12 @@ def explain_code(code: str) -> str:
                     2. Integration with LedgerLink's architecture
                     3. Best practices implemented
                     4. Potential improvements
-                    5. Security considerations"""
+                    5. Security considerations
+                    6. Financial data handling aspects
+                    7. Transaction management
+                    8. Audit logging
+                    9. Data validation
+                    10. Error handling strategies"""
                 },
                 {
                     "role": "user",
@@ -181,13 +205,15 @@ def generate_chat_response(content: str, conversation_id: int = None) -> Generat
                 "role": "assistant",
                 "content": """You are an AI assistant specialized for the LedgerLink project. Your role is to:
                 1. Help users understand and work with the LedgerLink codebase
-                2. Provide guidance on Django best practices
+                2. Provide guidance on Django best practices for financial systems
                 3. Assist with accounting and financial software concepts
                 4. Maintain a professional and helpful tone
                 5. Generate code that follows LedgerLink's patterns
                 6. Suggest improvements while maintaining system integrity
                 7. Consider security implications for financial data
-                8. Explain technical concepts clearly"""
+                8. Explain technical concepts clearly
+                9. Guide on proper transaction management
+                10. Advise on audit logging best practices"""
             },
             {
                 "role": "user",
