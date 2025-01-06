@@ -11,8 +11,10 @@ export const conversations = pgTable("conversations", {
 
 export const messages = pgTable("messages", {
   id: serial("id").primaryKey(),
-  conversationId: integer("conversation_id").references(() => conversations.id).notNull(),
-  role: text("role").notNull(), // 'user' or 'assistant'
+  conversationId: integer("conversation_id")
+    .references(() => conversations.id, { onDelete: 'cascade' })
+    .notNull(),
+  role: text("role", { enum: ['user', 'assistant'] }).notNull(),
   content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
