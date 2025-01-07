@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { CodeEditor } from "@/components/code/CodeEditor";
 import { ChatMessage } from "@/components/chat/ChatMessage";
-import { ChatInput } from "@/components/chat/ChatInput";
 import { Conversation, Message } from "@/lib/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
@@ -13,12 +12,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Info, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Send, Loader2, Info } from "lucide-react";
 
 export function CodeAssistant() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [code, setCode] = useState(`# Welcome to the AI Code Assistant!
+# You can:
+# 1. Write or paste code for analysis and improvements
+# 2. Ask questions about programming concepts
+# 3. Get help with debugging and problem-solving
+
+`);
   const [currentConversationId, setCurrentConversationId] = useState<number>();
 
   // Fetch current conversation
@@ -47,12 +54,11 @@ export function CodeAssistant() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: "Code Assistant Chat",
+          title: "Code Assistant Session",
           initialContext: {
-            topic: "Code Development",
             codeContext: {
-              language: "typescript",
-              projectContext: "AI Coding Assistant Development"
+              language: "python",
+              projectContext: "AI Code Assistant"
             }
           }
         }),
@@ -73,17 +79,18 @@ export function CodeAssistant() {
     }
   });
 
-  // Send message mutation
+  // Send code/query mutation
   const sendMessage = useMutation({
-    mutationFn: async (content: string) => {
+    mutationFn: async () => {
       if (!currentConversation) throw new Error("No conversation selected");
+      if (!code.trim()) return;
 
-      // Optimistically add user message
+      // Add user message
       const tempUserMessage: Message = {
         id: Date.now(),
         conversationId: currentConversation.id,
         role: "user",
-        content,
+        content: code,
         createdAt: new Date().toISOString(),
       };
 
@@ -100,7 +107,7 @@ export function CodeAssistant() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ content }),
+          body: JSON.stringify({ content: code }),
         }
       );
 
@@ -111,7 +118,7 @@ export function CodeAssistant() {
 
       let assistantMessage = "";
 
-      // Add temporary assistant message
+      // Add assistant message placeholder
       const tempAssistantMessage: Message = {
         id: Date.now() + 1,
         conversationId: currentConversation.id,
@@ -149,7 +156,7 @@ export function CodeAssistant() {
                 if (text) {
                   assistantMessage += text;
 
-                  // Update temporary assistant message
+                  // Update assistant message
                   queryClient.setQueryData<{ messages: Message[], context: Record<string, any> }>(
                     [`/api/conversations/${currentConversation.id}/messages`],
                     (old) => {
@@ -173,6 +180,9 @@ export function CodeAssistant() {
         reader.releaseLock();
       }
 
+      // Clear the input after sending
+      setCode("");
+
       // Invalidate queries to get fresh data
       queryClient.invalidateQueries({
         queryKey: [`/api/conversations/${currentConversation.id}/messages`],
@@ -182,7 +192,7 @@ export function CodeAssistant() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to send message",
+        description: error instanceof Error ? error.message : "Failed to process request",
       });
     },
   });
@@ -212,68 +222,87 @@ export function CodeAssistant() {
 
   return (
     <div className="container mx-auto py-8 px-4 min-h-screen flex flex-col">
-      <div className="space-y-6 flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col space-y-4">
         <div>
-          <h1 className="text-3xl font-bold">Code Assistant</h1>
+          <h1 className="text-3xl font-bold">AI Code Assistant</h1>
           <p className="text-muted-foreground">
-            Get real-time code suggestions and discuss your development questions
+            Your intelligent companion for software development
           </p>
         </div>
 
-        <div className="flex-1 flex flex-col space-y-4">
-          <CodeEditor 
-            language="python"
-            initialCode={`# Enter your code here or ask questions in natural language\n# Example:\ndef process_data(input_data: dict) -> dict:\n    pass`}
-          />
-
-          {isLoadingMessages ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Loading messages...</span>
-              </div>
-            </div>
-          ) : messages.length === 0 ? (
-            <Card>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1">
+          {/* Input Section */}
+          <div className="flex flex-col gap-4">
+            <Card className="flex-1">
               <CardHeader>
-                <CardTitle>Welcome to Your AI Code Assistant</CardTitle>
+                <CardTitle>Code & Query Input</CardTitle>
                 <CardDescription>
-                  I can help you with:
+                  Write code or ask questions in natural language
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-2">
-                  <li className="flex items-start gap-2">
-                    <Info className="h-5 w-5 mt-0.5 text-muted-foreground" />
-                    <span>Writing and improving code</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Info className="h-5 w-5 mt-0.5 text-muted-foreground" />
-                    <span>Explaining code concepts and patterns</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Info className="h-5 w-5 mt-0.5 text-muted-foreground" />
-                    <span>Debugging and problem-solving</span>
-                  </li>
-                </ul>
+                <CodeEditor 
+                  language="python"
+                  value={code}
+                  onChange={setCode}
+                  className="min-h-[400px]"
+                />
+                <div className="mt-4 flex justify-end">
+                  <Button 
+                    onClick={() => sendMessage.mutate()}
+                    disabled={sendMessage.isPending || !code.trim()}
+                  >
+                    {sendMessage.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4 mr-2" />
+                        Send
+                      </>
+                    )}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
-          ) : (
-            <ScrollArea className="flex-1 border rounded-lg bg-background">
-              <div className="flex flex-col gap-2 p-4">
-                {messages.map((message) => (
-                  <ChatMessage key={message.id} message={message} />
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
-            </ScrollArea>
-          )}
+          </div>
 
-          <ChatInput
-            onSend={(content) => sendMessage.mutate(content)}
-            disabled={sendMessage.isPending || !currentConversation}
-            loading={sendMessage.isPending}
-          />
+          {/* Response Section */}
+          <div className="flex flex-col gap-4">
+            <Card className="flex-1">
+              <CardHeader>
+                <CardTitle>Assistant Response</CardTitle>
+                <CardDescription>
+                  View code suggestions and explanations
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoadingMessages ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Loading conversation...</span>
+                    </div>
+                  </div>
+                ) : messages.length === 0 ? (
+                  <div className="text-center py-8 space-y-4">
+                    <Info className="h-12 w-12 mx-auto text-muted-foreground" />
+                    <p className="text-muted-foreground">
+                      Start by writing code or asking a question
+                    </p>
+                  </div>
+                ) : (
+                  <ScrollArea className="h-[600px] pr-4">
+                    <div className="space-y-4">
+                      {messages.map((message) => (
+                        <ChatMessage key={message.id} message={message} />
+                      ))}
+                      <div ref={messagesEndRef} />
+                    </div>
+                  </ScrollArea>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
