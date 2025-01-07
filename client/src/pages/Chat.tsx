@@ -5,7 +5,7 @@ import { ChatInput } from "@/components/chat/ChatInput";
 import { ConversationList } from "@/components/chat/ConversationList";
 import { Conversation, Message } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { Plus, Info, Menu } from "lucide-react";
+import { Plus, Info, Menu, Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -24,7 +24,7 @@ export function Chat() {
   const [selectedConversationId, setSelectedConversationId] = useState<number>();
 
   // Fetch conversations
-  const { data: conversations = [] } = useQuery<Conversation[]>({
+  const { data: conversations = [], isLoading: isLoadingConversations } = useQuery<Conversation[]>({
     queryKey: ["/api/conversations"],
   });
 
@@ -32,12 +32,17 @@ export function Chat() {
   const currentConversation = conversations.find(c => c.id === selectedConversationId) || conversations[0];
 
   // Fetch messages for current conversation
-  const { data: messages = [] } = useQuery<Message[]>({
+  const { data: messagesData, isLoading: isLoadingMessages } = useQuery<{
+    messages: Message[],
+    context: Record<string, any>
+  }>({
     queryKey: [
       `/api/conversations/${currentConversation?.id}/messages`,
     ],
     enabled: !!currentConversation,
   });
+
+  const messages = messagesData?.messages ?? [];
 
   // Select first conversation when loaded
   useEffect(() => {
@@ -51,6 +56,17 @@ export function Chat() {
     mutationFn: async () => {
       const response = await fetch("/api/conversations", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: "New Chat",
+          initialContext: {
+            topic: "General Discussion",
+            codeContext: {
+              language: "typescript",
+              projectContext: "LedgerLink Development"
+            }
+          }
+        }),
       });
       if (!response.ok) throw new Error("Failed to create conversation");
       return response.json();
@@ -59,6 +75,13 @@ export function Chat() {
       queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
       setSelectedConversationId(newConversation.id);
     },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to create conversation",
+      });
+    }
   });
 
   // Send message mutation
@@ -75,9 +98,12 @@ export function Chat() {
         createdAt: new Date().toISOString(),
       };
 
-      queryClient.setQueryData<Message[]>(
+      queryClient.setQueryData<{ messages: Message[], context: Record<string, any> }>(
         [`/api/conversations/${currentConversation.id}/messages`],
-        (old = []) => [...old, tempUserMessage]
+        (old) => ({
+          messages: [...(old?.messages || []), tempUserMessage],
+          context: old?.context || {}
+        })
       );
 
       const response = await fetch(
@@ -105,47 +131,55 @@ export function Chat() {
         createdAt: new Date().toISOString(),
       };
 
-      queryClient.setQueryData<Message[]>(
+      queryClient.setQueryData<{ messages: Message[], context: Record<string, any> }>(
         [`/api/conversations/${currentConversation.id}/messages`],
-        (old = []) => [...old, tempAssistantMessage]
+        (old) => ({
+          messages: [...(old?.messages || []), tempAssistantMessage],
+          context: old?.context || {}
+        })
       );
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-        const text = new TextDecoder().decode(value);
-        const lines = text.split("\n");
+          const text = new TextDecoder().decode(value);
+          const lines = text.split("\n");
 
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            const data = line.slice(6);
-            if (data === "[DONE]") break;
+          for (const line of lines) {
+            if (line.startsWith("data: ")) {
+              const data = line.slice(6);
+              if (data === "[DONE]") break;
 
-            try {
-              const { text } = JSON.parse(data);
-              assistantMessage += text;
+              try {
+                const { text } = JSON.parse(data);
+                assistantMessage += text;
 
-              // Update temporary assistant message
-              queryClient.setQueryData<Message[]>(
-                [`/api/conversations/${currentConversation.id}/messages`],
-                (old = []) => {
-                  const messages = [...old];
-                  const lastMessage = messages[messages.length - 1];
-                  if (lastMessage.role === "assistant") {
-                    lastMessage.content = assistantMessage;
+                // Update temporary assistant message
+                queryClient.setQueryData<{ messages: Message[], context: Record<string, any> }>(
+                  [`/api/conversations/${currentConversation.id}/messages`],
+                  (old) => {
+                    if (!old) return null;
+                    const messages = [...old.messages];
+                    const lastMessage = messages[messages.length - 1];
+                    if (lastMessage.role === "assistant") {
+                      lastMessage.content = assistantMessage;
+                    }
+                    return { ...old, messages };
                   }
-                  return messages;
-                }
-              );
-            } catch (e) {
-              console.error("Failed to parse SSE data:", e);
+                );
+              } catch (e) {
+                console.error("Failed to parse SSE data:", e);
+              }
             }
           }
         }
+      } finally {
+        reader.releaseLock();
       }
 
-      // Invalidate queries
+      // Invalidate queries to get fresh data including context updates
       queryClient.invalidateQueries({
         queryKey: [`/api/conversations/${currentConversation.id}/messages`],
       });
@@ -157,7 +191,7 @@ export function Chat() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Failed to send message",
       });
     },
   });
@@ -166,6 +200,17 @@ export function Chat() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  if (isLoadingConversations) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span>Loading conversations...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen">
@@ -212,11 +257,22 @@ export function Chat() {
             onClick={() => createConversation.mutate()}
             disabled={createConversation.isPending}
           >
-            <Plus className="h-4 w-4" />
+            {createConversation.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Plus className="h-4 w-4" />
+            )}
           </Button>
         </header>
 
-        {messages.length === 0 && (
+        {isLoadingMessages ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Loading messages...</span>
+            </div>
+          </div>
+        ) : messages.length === 0 ? (
           <Card className="m-4">
             <CardHeader>
               <CardTitle>Welcome to Your Project Assistant</CardTitle>
@@ -241,20 +297,21 @@ export function Chat() {
               </ul>
             </CardContent>
           </Card>
+        ) : (
+          <ScrollArea className="flex-1">
+            <div className="flex flex-col gap-2 py-4">
+              {messages.map((message) => (
+                <ChatMessage key={message.id} message={message} />
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+          </ScrollArea>
         )}
-
-        <ScrollArea className="flex-1">
-          <div className="flex flex-col gap-2 py-4">
-            {messages.map((message) => (
-              <ChatMessage key={message.id} message={message} />
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
-        </ScrollArea>
 
         <ChatInput
           onSend={(content) => sendMessage.mutate(content)}
           disabled={sendMessage.isPending || !currentConversation}
+          isLoading={sendMessage.isPending}
         />
       </div>
     </div>
