@@ -1,0 +1,84 @@
+ 8 minutes read
+Have you ever faced a complicated problem that seemed too confusing to tackle? They can be difficult and overwhelming to solve at once, and doing that might even give you the wrong answers. However, a valuable method known as problem decomposition can be used in this situation.
+
+Problem decomposition prompting
+Problem decomposition is the process of breaking down big and complex tasks into smaller and manageable sub-tasks. Here is a real-life example of problem decomposition: If you want to build a house, you must consider many factors first, such as choosing the location, determining the number of floors, deciding on the number of rooms, calculating the total area, and so on. Decomposing the problem will help to gain a precise understanding of the steps required to construct a house.
+
+In LLMs, problem decomposition prompting is important when the input prompt is complex, which could be challenging for LLMs to interpret the problem and generate the actual output. The next section discusses the three methods of problem decomposition prompting.
+
+Least-to-Most prompting (LtM):
+The Least-to-Most prompting is the process of prompting the LLMs in a manner where we gradually increase the complexity of our questions as we continue prompting. To understand this prompting process, consider building a weather forecasting application. The making of this application requires various sectors that have to be considered. To solve this problem, divide the task into the least complex, moderately complex, and most complex. After dividing, make the sub-task of least complex, moderately complex, and most complex:
+
+Least Complex Task: Retrieve the current weather data for a specific location using an API.
+
+Sub-task 1: Research available weather APIs.
+Sub-task 2: Write a function to send a request to the API.
+Sub-task 3: Parse the returned JSON data to extract relevant weather information.
+
+In this image, the least complex task is being prompted along with the questions/sub-tasks related to the least complex task.
+
+This image is a part of the above image.
+
+Moderately Complex Task: Implement caching to store weather data and reduce API calls.
+
+Sub-task 1: Design a caching mechanism to store the latest weather data.
+Sub-task 2: Implement a time-based invalidation strategy for the cache.
+Sub-task 3: Update the weather retrieval function to check the cache before making an API
+
+In this image, the moderately complex task is prompted along with the questions/sub-tasks related to the moderately complex task.
+
+Most Complex Task: Create a user interface that allows users to get weather forecasts for the week ahead and visualize data trends.
+
+Sub-task 1: Design a UI layout for displaying the weather forecast.
+Sub-task 2: Implement UI components for daily weather summaries.
+Sub-task 3: Develop interactive charts for visualizing temperature trends over time.
+
+In this image, the question has been prompted along with the plan and the questions to execute the plan.
+
+The disadvantage that this method has is that it may not allow the LLMs to provide creativity and think critically because they may rely heavily on the sub-tasks that we provide rather than exploring the possible solutions by themselves.
+
+Plan-And-Solve prompting (PaS):
+In this method, the planning is done to break down the complex problem into sub-tasks then prompt some questions to execute the plan. The planning process of dividing the complex problem helps to gain the clarity of each plan in depth, which assists in generating accurate results. This approach is crucial because there is a high chance that LLMs may misinterpret complex problems.
+
+Imagine you're tasked with creating a shopping cart for an E-commerce platform. You may make the following plans to complete the task:
+
+1. Identify the requirements for the shopping cart, such as adding items, removing items, updating quantities, and calculating totals.
+2. Design the data structures required to store cart items and their quantities.
+3. Establish the user workflows for interacting with the shopping cart, such as adding items to the cart and proceeding to checkout.
+
+After making the plan, you can prompt LLM to generate the answer according to the questions used to execute the plan.
+
+In this image, the question has been prompted along with the plan and the questions to execute the plan.
+
+This image is the part of the answer of the Plan-and-Solve prompting technique.
+
+While this method is useful for generating correct output, the accuracy of the output depends on the initial planning stage. If the problem is not decomposed properly, then it can lead to the generation of incorrect results. However, it's important to note that decomposing the problem may not always be easy, which makes this method hard to implement.
+
+Program-of-Thought prompting (PoTh):
+The Program-of-Thought promoting technique is an approach to problem-solving where the product becomes more ideal as you reach further steps. Initially, it requires identifying the primary functionality required to solve the task. These initial thoughts serve as a foundation for further exploration and development. After identifying the primary goals or requirements, the next step is to dive deeper into each idea. Once you have these detailed tasks, move on to refining the ideas further by enhancing or adding functionality to them. Each refined thought leads to the optimization of the overall project outcome.
+
+To understand this technique, you may consider the example of creating a multiplayer online game server. The decomposition of the problem using this method is listed below:
+
+Initial Thought: The server that can handle multiple player connections, game state management, and real-time communication.
+
+Sub-task 1: Set up a basic server that can accept player connections.
+Sub-task 2: Determine a method for uniquely identifying and managing connected players.
+
+In this image, the initial thoughts are prompted along with the questions related to the initial thoughts to solve the task.
+
+Developing Thought: The server must be scalable to support an increasing number of players without significant performance degradation.
+
+Sub-task 1: Implement load balancing to distribute player connections across multiple server instances.
+Sub-task 2: Optimize data transmission methods for efficiency and speed.
+
+In this image, the developing thoughts are prompted along with the questions related to the developing thoughts to solve the task.
+
+Refined Thought: The game server should provide a fair and synchronized gameplay experience for all players.
+
+Sub-task 1: Design and implement game state synchronization mechanisms.
+Sub-task 2: Develop anti-cheat measures to ensure fair play.
+Sub-task 3: Introduce lag compensation techniques to minimize the impact of network latency on gameplay.
+
+In this image, the refined thoughts are prompted along with the questions related to the refined thoughts to solve the task.
+
+The disadvantage of this method is that as tasks become more refined, integrating each functionality into a single result becomes increasingly challenging. With detailed tasks, ensuring seamless integration becomes harder, which can potentially lead to disjointed functionalities.

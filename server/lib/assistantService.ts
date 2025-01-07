@@ -2,7 +2,9 @@ import { Anthropic } from '@anthropic-ai/sdk';
 import { db } from "@db";
 import { messages } from "@db/schema";
 import { ContextManager } from "./contextManager";
+import { systemPrompts, reasoningSchema } from './prompts/systemPrompts';
 import { eq } from "drizzle-orm";
+import { z } from "zod";
 
 // the newest Anthropic model is "claude-3-5-sonnet-20241022" which was released October 22, 2024
 const MODEL = "claude-3-5-sonnet-20241022";
@@ -21,30 +23,25 @@ export class AssistantService {
       // Get conversation context
       const conversationContext = await ContextManager.getConversationContext(conversationId);
 
-      // Prepare system message with context
-      const systemMessage = this.buildSystemMessage(conversationContext.context);
+      // Decompose the user's request into clear steps using chain-of-thought
+      const decomposedPrompt = this.decomposeRequest(content, conversationContext.context);
 
-      // Prepare conversation history - filter out empty messages
-      const messageHistory = conversationContext.relevantHistory
-        .filter(msg => msg.content && msg.content.trim() !== '')
-        .map(msg => ({
-          role: msg.role,
-          content: msg.content
-        }));
-
-      // Create the stream
+      // Create the stream with improved context and prompting
       const stream = await anthropic.messages.create({
         model: MODEL,
         max_tokens: 2048,
         messages: [
-          ...messageHistory,
-          { role: 'user', content }
+          ...this.prepareMessageHistory(conversationContext.relevantHistory),
+          { 
+            role: 'user', 
+            content: decomposedPrompt 
+          }
         ],
-        system: systemMessage,
+        system: this.buildSystemMessage(conversationContext.context),
         stream: true
       });
 
-      // Save assistant message placeholder to get the ID
+      // Save assistant message placeholder
       const [assistantMessage] = await db.insert(messages).values({
         conversationId,
         role: 'assistant',
@@ -65,10 +62,13 @@ export class AssistantService {
             }
           }
 
-          // Update the complete message in the database using proper drizzle-orm syntax
+          // Validate response structure
+          const validatedResponse = await AssistantService.validateResponse(fullResponse);
+
+          // Update message with validated response
           await db
             .update(messages)
-            .set({ content: fullResponse })
+            .set({ content: validatedResponse })
             .where(eq(messages.id, assistantMessage.id));
 
         } catch (error) {
@@ -84,30 +84,69 @@ export class AssistantService {
     }
   }
 
+  private static decomposeRequest(content: string, context: Record<string, any>): string {
+    // Use problem decomposition to break down complex requests
+    return `Let's solve this step by step:
+
+1. Understanding the Request:
+- Analyze the user's question: "${content}"
+- Consider the current context and codebase state
+- Identify key technical concepts involved
+
+2. Relevant Context:
+- Current application state: ${context.currentState || 'Not specified'}
+- Language/Framework: ${context.codeContext?.language || 'Not specified'}
+- Project focus: ${context.codeContext?.projectContext || 'Not specified'}
+
+3. Solution Approach:
+- Break down the solution into clear steps
+- Reference specific patterns when applicable
+- Consider best practices and potential edge cases
+
+Please respond in a structured format:
+1. First explain your understanding
+2. Then outline your approach
+3. Finally provide the implementation or answer
+4. Include any necessary verification steps`;
+  }
+
+  private static prepareMessageHistory(history: any[]): any[] {
+    return history
+      .filter(msg => msg.content && msg.content.trim() !== '')
+      .map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
+  }
+
+  private static async validateResponse(response: string): Promise<string> {
+    try {
+      // Ensure response follows reasoning structure
+      const parts = response.split(/\d+\./);
+      const structured = {
+        understanding: parts[1]?.trim() || '',
+        approach: parts[2]?.trim() || '',
+        considerations: parts.slice(3, -1).map(p => p.trim()),
+        conclusion: parts[parts.length - 1]?.trim() || ''
+      };
+
+      // Validate using zod schema
+      const validated = reasoningSchema.parse(structured);
+
+      // Return formatted response
+      return `Understanding: ${validated.understanding}\n\n` +
+             `Approach: ${validated.approach}\n\n` +
+             `Key Considerations:\n${validated.considerations.map(c => `- ${c}`).join('\n')}\n\n` +
+             `Conclusion: ${validated.conclusion}`;
+    } catch (error) {
+      console.error('Response validation failed:', error);
+      return response; // Fall back to original response if validation fails
+    }
+  }
+
   private static buildSystemMessage(context: Record<string, any>): string {
-    let systemMessage = `You are an expert AI coding assistant specializing in software development and technical problem-solving.
-
-Your core capabilities include:
-- Providing detailed code explanations and suggestions
-- Helping debug technical issues
-- Offering best practices and design patterns
-- Assisting with code reviews and improvements
-
-Current Application Context:
-We are building an advanced AI-powered coding assistant that features:
-- Chat interface for developer assistance
-- Code pattern detection and suggestions
-- Conversation memory and context management
-- Multi-AI model integration
-- Real-time response streaming
-- Code repository management and analysis
-- Advanced codebase understanding
-
-You have access to the LedgerLink codebase and understand its patterns and structure.
-When discussing code or suggesting solutions, reference and utilize patterns from the codebase
-when relevant to provide more contextual and project-specific assistance.
-
-Please provide clear, relevant responses focused on helping developers with their technical questions and coding tasks.`;
+    // Get base system prompt based on context
+    let systemMessage = systemPrompts.codeAssistant;
 
     // Add code context if available
     if (context.codeContext) {
@@ -116,7 +155,7 @@ Please provide clear, relevant responses focused on helping developers with thei
       - Project context: ${context.codeContext.projectContext || 'Not specified'}
       ${context.codeContext.patterns ? `- Detected patterns: ${context.codeContext.patterns.join(', ')}` : ''}`;
 
-      // Add relevant files
+      // Add relevant files with their code patterns
       if (context.codeContext.relevantFiles?.length) {
         systemMessage += '\n\nRelevant code files:';
         for (const file of context.codeContext.relevantFiles) {

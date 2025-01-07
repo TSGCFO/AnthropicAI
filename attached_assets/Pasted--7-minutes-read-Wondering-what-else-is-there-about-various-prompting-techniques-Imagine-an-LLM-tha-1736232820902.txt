@@ -1,0 +1,70 @@
+ 7 minutes read
+Wondering what else is there about various prompting techniques? Imagine an LLM that doesn't just provide answers but actually reasons through problems. That's the idea behind Chain-of-Thought (CoT) prompting — it helps simulate human-like thought processes.
+
+In this topic, you'll learn how to use CoT prompting. We'll look at ways to guide an LLM to think in a structured, step-by-step manner, which leads to more understandable and explainable outcomes.
+
+What is chain-of-thought prompting?
+Chain-of-thought prompting is a technique of interacting with AI that prompts it to break down complex problems into manageable steps. This is like explaining your solution of a math problem—it's not just about the end result, but also the path taken to reach it. By asking the AI to articulate its reasoning, we can gain insights into its thought process.
+
+For example, consider the task of calculating the number of apples you can buy with a certain amount of money. Usually LLM would give the final answer directly, but with CoT, LLM would explain each step: dividing the total money by the cost of one apple to determine the quantity you can purchase. It has been shown that CoT helps the LLM to arrive at a logically sound conclusion.
+
+Here are two examples of prompting taken from Wei et al. article "Chain-of-Thought Prompting Elicits Reasoning in Large Language Models". First comes few-shot prompting:
+
+AI Advisor's avatar
+Go ahead and try sending a question. You can try different models.
+Question: Roger has 5 tennis balls. He buys 2 more cans of tennis balls. Each can has 3 tennis balls. How many tennis balls does he have now? Answer: The answer is 11. Question: The cafeteria had 23 apples. If they used 20 to make lunch and bought 6 more, how many apples do they have?
+Now they use chain-of-thought prompting:
+
+AI Advisor's avatar
+Go ahead and try sending a question. You can try different models.
+Question: Roger has 5 tennis balls. He buys 2 more cans of tennis balls. Each can has 3 tennis balls. How many tennis balls does he have now? Answer: Roger started with 5 balls. 2 cans of 3 tennis balls each is 6 tennis balls. 5 + 6 = 11. The answer is 11. Question: The cafeteria had 23 apples. If they used 20 to make lunch and bought 6 more, how many apples do they have?
+Applications of CoT prompting
+Now that you understand the basics of this technique, let's explore some use cases benefitting from chain-of-thought prompting.
+
+Educational Technology: AI tutors can provide explanations for their solutions, helping students follow the logic and learn effectively.
+
+Customer Service: LLMs can use CoT to explain decisions or offer recommendations to customers, enhancing trust and satisfaction. Isn't it cool to have a personal assistant guiding you in choosing an appropriate suit for a party?
+
+Programming Assistance: That's why we are here, right? To learn how to use LLMs for tackling challenging coding problems! Developers can use CoT to explain code snippets or algorithms, helping in understanding and debugging code. In data analysis, CoT helps outlining the steps taken to arrive at conclusions from data sets, making the analytical process clearer for decision-makers.
+
+Designing effective CoT prompts
+Effective chain-of-thought prompts are clear, structured, and goal-oriented, guiding the LLM to produce a coherent chain of reasoning. They should be specific enough to output the desired thought process, yet flexible to allow the LLM to demonstrate its problem-solving capabilities.
+
+For example, an effective CoT prompt for a programming problem would not just ask for the solution, but include step-by-step guidance on how to design the code. Let's imagine you want to produce a working Python code snippet defining a sorting function for a list of integers in ascending order via bubble sort. Instead of prompting ChatGPT with a generic question like "write a Pyhton function to sort a list of integers with bubble sort", you can ask it to think step-by-step and give it explicit directions about the program structure:
+
+Please write a Python code which defines a function sorting list of integers via bubble sort. 
+Think step-by-step, strictly following the instructions about code structure given below.
+
+INSTRUCTIONS:
+1. Given a list as an input, get its length and store it in a variable.
+2. In the loop from the first to the penultimate element of the list, compare the current integer with its next neighbor.
+3. If the neighbor is less than current element, swap them.
+4. Else, do nothing and proceed to the next element.
+5. Repeat until the loop ends.
+
+Roll this prompt into ChatGPT and see what happens!
+
+AI Advisor's avatar
+Go ahead and try sending a question. You can try different models.
+Please write a Python code which defines a function sorting list of integers via bubble sort.  Think step-by-step, strictly following the instructions about code structure given below.  INSTRUCTIONS: 1. Given a list as an input, get its length and store it in a variable. 2. In the loop from the first to the penultimate element of the list,    compare the current integer with its next neighbor. 3. If the neighbor is less than current element, swap them. 4. Else, do nothing and proceed to the next element. 5. Repeat until the loop ends.
+This contrasts with ineffective CoT prompts, which are vague, overly complex, or too directive, limiting the ability to showcase the reasoning. Taking as an example the above case with the bubble sorting function, a less effective prompt might look like this:
+
+Use chain of thought. YOU MUST FOLLOW THE INSTRUCTIONS: 
+1. Make a bubble sort code in Python. 
+2. In this code, swap neighbors if the left one is greater than the right one.
+
+AI Advisor's avatar
+Go ahead and try sending a question. You can try different models.
+Use chain of thought. YOU MUST FOLLOW THE INSTRUCTIONS:  1. Make a bubble sort code in Python.  2. In this code, swap neighbors if the left one is greater than the right one.
+We can see that, when compared with the previous response, there are fewer explanations of the provided code.
+
+Why use chain-of-thought prompting for code generation?
+CoT prompting offers several compelling benefits for AI-assisted coding and problem solving:
+
+Transparency: CoT encourages the LLM to provide step-by-step explanations of its reasoning process. Such transparency makes users understand how the LLM arrived at a particular solution.
+
+Comprehensive answers: By prompting the LLM to consider alternative perspectives and approaches, using CoT leads to more thorough responses. This helps avoid narrow or biased solutions and offers users a wider comprehension of the coding problem.
+
+Enhanced reasoning capabilities: CoT prompting improves the LLM's reasoning capabilities by breaking down complex coding problems into sequential steps, encouraging a structured thought process. This leads to higher-quality code snippets and more accurate explanations.
+
+While CoT prompting can enhance LLM's performance in coding tasks, it's important to keep in mind that models might still produce incorrect responses. However, by using proper prompting techniques, you can take the advantages of CoT for producing well-explained code.
