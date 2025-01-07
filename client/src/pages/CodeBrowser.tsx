@@ -28,9 +28,17 @@ export function CodeBrowser() {
   });
 
   // Query for file content
-  const { data: fileContent, isLoading: isLoadingContent } = useQuery({
-    queryKey: [`/api/codebase/file`, { path: selectedFile?.path }],
+  const { data: fileData, isLoading: isLoadingContent } = useQuery<{ content: string }>({
+    queryKey: ["/api/codebase/file", selectedFile?.path],
     enabled: !!selectedFile?.path,
+    queryFn: async () => {
+      const res = await fetch(`/api/codebase/file?path=${encodeURIComponent(selectedFile?.path!)}`);
+      if (!res.ok) {
+        const error = await res.text();
+        throw new Error(error);
+      }
+      return res.json();
+    },
   });
 
   const toggleDir = (path: string) => {
@@ -134,13 +142,13 @@ export function CodeBrowser() {
                 <div className="flex items-center justify-center p-4">
                   <Loader2 className="h-4 w-4 animate-spin" />
                 </div>
-              ) : fileContent ? (
+              ) : fileData ? (
                 <pre className="p-4 text-sm">
-                  <code>{fileContent?.content}</code>
+                  <code>{fileData.content}</code>
                 </pre>
               ) : (
                 <div className="p-4 text-sm text-muted-foreground">
-                  No content available
+                  Failed to load file content
                 </div>
               )}
             </ScrollArea>
