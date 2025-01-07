@@ -2,9 +2,10 @@ import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, Copy, Check } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import CodeEditorLib from "@uiw/react-textarea-code-editor";
 
 interface CodeEditorProps {
   initialCode?: string;
@@ -23,7 +24,9 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
   const [suggestions, setSuggestions] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<CodeAnalysis | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
+  const debounceTimerRef = useRef<NodeJS.Timeout>();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -33,6 +36,10 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
 
     ws.onopen = () => {
       console.log("Connected to Code AI WebSocket");
+      toast({
+        title: "Connected",
+        description: "Connected to Code AI service",
+      });
     };
 
     ws.onmessage = (event) => {
@@ -143,10 +150,32 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
     }
   };
 
-  const handleCodeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newCode = e.target.value;
+  const handleCodeChange = (newCode: string) => {
     setCode(newCode);
     onCodeChange?.(newCode);
+
+    // Debounce real-time suggestions
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      if (newCode.trim().length > 10) {
+        requestSuggestion();
+      }
+    }, 1000);
+  };
+
+  const copyToClipboard = async () => {
+    if (suggestions) {
+      await navigator.clipboard.writeText(suggestions);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      toast({
+        title: "Copied",
+        description: "Code copied to clipboard",
+      });
+    }
   };
 
   return (
@@ -172,12 +201,23 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <label className="text-sm font-medium">Your Code</label>
-            <textarea
-              value={code}
-              onChange={handleCodeChange}
-              className="w-full h-[400px] font-mono text-sm p-4 rounded-md border bg-background"
-              placeholder="Enter your code here..."
-            />
+            <div className="relative">
+              <CodeEditorLib
+                value={code}
+                language={language}
+                onChange={(e) => handleCodeChange(e.target.value)}
+                padding={15}
+                style={{
+                  fontSize: 14,
+                  backgroundColor: "var(--background)",
+                  fontFamily: "ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace",
+                  borderRadius: "0.5rem",
+                  border: "1px solid var(--border)",
+                  minHeight: "400px",
+                }}
+                className="min-h-[400px]"
+              />
+            </div>
           </div>
 
           {(suggestions || analysis) && (
@@ -190,12 +230,34 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
 
                 <TabsContent value="suggestions">
                   {suggestions && (
-                    <ScrollArea className="h-[400px] w-full rounded-md border p-4">
-                      <div className="space-y-2">
-                        <h4 className="font-medium">Improved Code</h4>
-                        <pre className="whitespace-pre-wrap overflow-auto">
-                          {suggestions}
-                        </pre>
+                    <ScrollArea className="h-[400px] w-full rounded-md border">
+                      <div className="p-4 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <h4 className="font-medium">Improved Code</h4>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={copyToClipboard}
+                            className="h-8"
+                          >
+                            {copied ? (
+                              <Check className="h-4 w-4" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                        <CodeEditorLib
+                          value={suggestions}
+                          language={language}
+                          readOnly
+                          padding={15}
+                          style={{
+                            fontSize: 14,
+                            backgroundColor: "var(--background)",
+                            fontFamily: "ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace",
+                          }}
+                        />
                       </div>
                     </ScrollArea>
                   )}
