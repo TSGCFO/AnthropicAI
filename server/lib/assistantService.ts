@@ -2,6 +2,7 @@ import { Anthropic } from '@anthropic-ai/sdk';
 import { db } from "@db";
 import { messages } from "@db/schema";
 import { ContextManager } from "./contextManager";
+import { eq } from "drizzle-orm";
 
 // the newest Anthropic model is "claude-3-5-sonnet-20241022" which was released October 22, 2024
 const MODEL = "claude-3-5-sonnet-20241022";
@@ -62,11 +63,11 @@ export class AssistantService {
             }
           }
 
-          // Update the complete message in the database
+          // Update the complete message in the database using proper drizzle-orm syntax
           await db
             .update(messages)
             .set({ content: fullResponse })
-            .where({ id: assistantMessage.id });
+            .where(eq(messages.id, assistantMessage.id));
 
         } catch (error) {
           console.error('Error in stream processing:', error);
