@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Copy, Check } from "lucide-react";
+import { Loader2, Copy, Check, Upload, Download } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CodeEditorLib from "@uiw/react-textarea-code-editor";
@@ -29,6 +29,8 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
   const [explanation, setExplanation] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout>();
   const { toast } = useToast();
@@ -137,6 +139,78 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
     }
   };
 
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Get file extension to set language
+    const extension = file.name.split('.').pop()?.toLowerCase();
+    const supportedExtensions: { [key: string]: string } = {
+      'py': 'python',
+      'js': 'javascript',
+      'ts': 'typescript',
+      'jsx': 'javascript',
+      'tsx': 'typescript',
+      'java': 'java',
+      'cpp': 'cpp',
+      'c': 'c',
+      'cs': 'csharp',
+      'go': 'go',
+      'rs': 'rust',
+      'rb': 'ruby',
+      'php': 'php',
+      'swift': 'swift',
+      'kt': 'kotlin',
+    };
+
+    if (extension && extension in supportedExtensions) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target?.result as string;
+        setCode(content);
+        setFileName(file.name);
+        toast({
+          title: "File Loaded",
+          description: `Successfully loaded ${file.name}`,
+        });
+      };
+      reader.readAsText(file);
+    } else {
+      toast({
+        title: "Invalid File",
+        description: "Please upload a supported code file",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDownload = () => {
+    if (!suggestions && !code) {
+      toast({
+        title: "Error",
+        description: "No code to download",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const content = suggestions || code;
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName ? `improved_${fileName}` : `code.${language}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "Downloaded",
+      description: "Code file has been downloaded",
+    });
+  };
+
   const requestSuggestion = async () => {
     if (!code.trim()) {
       toast({
@@ -214,20 +288,53 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
     <Card className="p-4 w-full">
       <div className="flex flex-col gap-4">
         <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold">Code Editor</h3>
-          <Button
-            onClick={requestSuggestion}
-            disabled={isLoading || !code.trim()}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Analyzing...
-              </>
-            ) : (
-              "Get Suggestions"
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold">Code Editor</h3>
+            {fileName && (
+              <span className="text-sm text-muted-foreground">
+                {fileName}
+              </span>
             )}
-          </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              className="hidden"
+              accept=".py,.js,.ts,.jsx,.tsx,.java,.cpp,.c,.cs,.go,.rs,.rb,.php,.swift,.kt"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Upload
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownload}
+              disabled={!code && !suggestions}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download
+            </Button>
+            <Button
+              onClick={requestSuggestion}
+              disabled={isLoading || !code.trim()}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Analyzing...
+                </>
+              ) : (
+                "Get Suggestions"
+              )}
+            </Button>
+          </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
