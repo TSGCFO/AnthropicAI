@@ -11,3 +11,67 @@
     @apply font-sans antialiased bg-background text-foreground;
   }
 }
+
+/* Context Map Visualization Styles */
+.node {
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.node:hover {
+  opacity: 0.8;
+}
+
+.node-type-file rect {
+  fill: hsl(var(--primary));
+}
+
+.node-type-function rect {
+  fill: hsl(var(--secondary));
+}
+
+.node-type-class rect {
+  fill: hsl(var(--accent));
+}
+
+.node-type-pattern rect {
+  fill: hsl(var(--muted));
+}
+
+.node text {
+  font-size: 12px;
+  fill: hsl(var(--foreground));
+}
+
+.edge path {
+  stroke: hsl(var(--border));
+  stroke-width: 1.5;
+  fill: none;
+  marker-end: url(#arrowhead);
+}
+
+.edge-type-imports path {
+  stroke-dasharray: 5, 5;
+}
+
+.edge-type-calls path {
+  stroke-width: 2;
+}
+
+.edge-type-extends path {
+  stroke: hsl(var(--primary));
+}
+
+.edge-type-implements path {
+  stroke: hsl(var(--secondary));
+  stroke-dasharray: 3, 3;
+}
+
+.edge-type-uses path {
+  stroke: hsl(var(--accent));
+  stroke-width: 1;
+}
+
+.node-hover {
+  filter: brightness(1.1);
+}
