@@ -99,6 +99,21 @@ export function CodeBrowser() {
   const { data: fileData, isLoading: isLoadingContent } = useQuery<{ content: string }>({
     queryKey: ["/api/codebase/file", selectedFile?.path],
     enabled: !!selectedFile?.path,
+    queryFn: async ({ queryKey }) => {
+      const path = queryKey[1];
+      if (!path) throw new Error("Path is required");
+
+      const response = await fetch(`/api/codebase/file?path=${encodeURIComponent(path)}`, {
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error);
+      }
+
+      return response.json();
+    }
   });
 
   const toggleDir = (path: string) => {
