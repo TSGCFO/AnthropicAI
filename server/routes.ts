@@ -285,14 +285,18 @@ def process_financial_transaction(request):
         }
 
         res.write('data: [DONE]\n\n');
-        res.end();
       } catch (error) {
         console.error('Streaming error:', error);
-        throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        res.write(`data: ${JSON.stringify({ error: errorMessage })}\n\n`);
+      } finally {
+        res.end();
       }
     } catch (error) {
       console.error('Request error:', error);
-      res.status(500).json({ error: "Failed to process message" });
+      if (!res.headersSent) {
+        res.status(500).json({ error: "Failed to process message" });
+      }
     }
   });
 

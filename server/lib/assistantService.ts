@@ -62,57 +62,73 @@ ${conversationContext.relevantHistory
         { role: 'user', content }
       ];
 
-      const stream = await generateChatResponse(messages);
+      try {
+        const stream = await generateChatResponse(messages);
 
-      for await (const chunk of stream) {
-        // Handle Anthropic's streaming format
-        if (chunk.type === 'content_block_delta' && chunk.delta.text) {
-          const text = chunk.delta.text;
+        for await (const chunk of stream) {
+          // Handle Anthropic's streaming format
+          if (chunk.type === 'content_block_delta' && chunk.delta.text) {
+            const text = chunk.delta.text;
 
-          // Check for tool call
-          const toolCall = this.parseToolCall(text);
-          if (toolCall) {
             try {
-              const result = await this.executeToolCall(toolCall);
+              // Check for tool call
+              const toolCall = this.parseToolCall(text);
+              if (toolCall) {
+                try {
+                  const result = await this.executeToolCall(toolCall);
 
-              // Add tool result to conversation
-              messages.push(
-                { role: 'assistant', content: text },
-                { role: 'system', content: `Tool result: ${JSON.stringify(result)}` }
-              );
+                  // Add tool result to conversation
+                  messages.push(
+                    { role: 'assistant', content: text },
+                    { role: 'system', content: `Tool result: ${JSON.stringify(result)}` }
+                  );
 
-              // Get continuation 
-              const continuationStream = await generateChatResponse(messages);
-              for await (const continuationChunk of continuationStream) {
-                if (continuationChunk.type === 'content_block_delta' && continuationChunk.delta.text) {
-                  const continuationText = continuationChunk.delta.text;
-                  fullResponse += continuationText;
-                  yield { text: continuationText };
+                  // Get continuation 
+                  const continuationStream = await generateChatResponse(messages);
+                  for await (const continuationChunk of continuationStream) {
+                    if (continuationChunk.type === 'content_block_delta' && continuationChunk.delta.text) {
+                      const continuationText = continuationChunk.delta.text;
+                      fullResponse += continuationText;
+                      yield { text: continuationText };
+                    }
+                  }
+                } catch (error) {
+                  console.error('Tool execution error:', error);
+                  const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                  fullResponse += `\nError executing tool: ${errorMessage}\n`;
+                  yield { text: `\nError executing tool: ${errorMessage}\n` };
                 }
+              } else {
+                fullResponse += text;
+                yield { text: text };
               }
             } catch (error) {
-              console.error('Tool execution error:', error);
-              yield { text: `\nError executing tool: ${error instanceof Error ? error.message : 'Unknown error'}\n` };
+              console.error('Error processing chunk:', error);
+              const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+              yield { text: errorMessage };
             }
-          } else {
-            fullResponse += text;
-            yield { text };
           }
         }
-      }
 
-      // Save assistant message with proper schema values
-      await db.insert(messages).values({
-        conversationId,
-        role: 'assistant',
-        content: fullResponse,
-        contextSnapshot: {},
-        createdAt: new Date()
-      });
+        // Save assistant message with proper schema values
+        await db.insert(messages).values({
+          conversationId,
+          role: 'assistant',
+          content: fullResponse,
+          contextSnapshot: {},
+          createdAt: new Date()
+        });
+
+      } catch (error) {
+        console.error('Stream processing error:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        yield { text: `Error: ${errorMessage}` };
+      }
 
     } catch (error) {
       console.error('Error processing message:', error);
-      throw error;
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      yield { text: `Error: ${errorMessage}` };
     }
   }
 
