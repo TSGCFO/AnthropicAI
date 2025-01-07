@@ -249,19 +249,19 @@ def process_financial_transaction(request):
     }
   });
 
-  // Send a message and get AI response with context management
+  // Send a message and get AI response with tools
   app.post("/api/conversations/:id/messages", async (req, res) => {
     const { content } = req.body;
     const conversationId = parseInt(req.params.id);
 
     try {
       // Save user message
-      const userMessage = await db.insert(messages).values({
+      await db.insert(messages).values({
         conversationId,
         role: "user",
         content,
         contextSnapshot: {}
-      }).returning();
+      });
 
       // Update conversation timestamp
       await db
@@ -276,22 +276,12 @@ def process_financial_transaction(request):
 
       try {
         const stream = await AssistantService.processMessage(content, conversationId);
-        let fullResponse = '';
 
         for await (const chunk of stream) {
           if (chunk.text) {
-            fullResponse += chunk.text;
             res.write(`data: ${JSON.stringify({ text: chunk.text })}\n\n`);
           }
         }
-
-        // Save assistant message
-        await db.insert(messages).values({
-          conversationId,
-          role: "assistant",
-          content: fullResponse,
-          contextSnapshot: {}
-        });
 
         res.write('data: [DONE]\n\n');
         res.end();

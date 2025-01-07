@@ -11,13 +11,11 @@ interface CodeReference {
   relevance: number;
 }
 
-interface CodeSearchResult {
-  references: CodeReference[];
-  context: {
-    topic?: string;
-    relatedFiles?: string[];
-    patterns?: string[];
-  }
+interface CodePattern {
+  name: string;
+  description: string;
+  confidence: number;
+  suggestions: string[];
 }
 
 export class CodebaseTools {
@@ -27,34 +25,36 @@ export class CodebaseTools {
   static async findReferences(query: string, options: {
     language?: string;
     maxResults?: number;
-    includeContext?: boolean;
-  } = {}): Promise<CodeSearchResult> {
-    const { language, maxResults = 5, includeContext = true } = options;
+  } = {}): Promise<CodeReference[]> {
+    const { language, maxResults = 5 } = options;
 
     try {
-      // Build search query
       const searchQuery = db.select({
         filePath: codeSnippets.filePath,
         content: codeSnippets.content,
         language: codeSnippets.language,
         metadata: codeSnippets.metadata,
-      }).from(codeSnippets)
-      .where(sql`
-        ${codeSnippets.content} ILIKE ${`%${query}%`} OR
-        ${codeSnippets.description} ILIKE ${`%${query}%`}
-      `);
+      }).from(codeSnippets);
 
       if (language) {
         searchQuery.where(eq(codeSnippets.language, language));
       }
 
-      // Calculate relevance score based on matches
+      // Add relevance-based search conditions
+      searchQuery.where(sql`
+        ${codeSnippets.content} ILIKE ${`%${query}%`} OR
+        ${codeSnippets.description} ILIKE ${`%${query}%`}
+      `);
+
       const results = await searchQuery.execute();
-      
+
+      // Calculate relevance scores
       const scoredResults = results.map(result => {
-        const contentMatches = (result.content.match(new RegExp(query, 'gi')) || []).length;
-        const descriptionMatches = ((result.metadata as any).description?.match(new RegExp(query, 'gi')) || []).length;
-        
+        // Escape special regex characters in query
+        const safeQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const contentMatches = (result.content.match(new RegExp(safeQuery, 'gi')) || []).length;
+        const descriptionMatches = ((result.metadata as any).description?.match(new RegExp(safeQuery, 'gi')) || []).length;
+
         return {
           filePath: result.filePath,
           content: result.content,
@@ -64,27 +64,13 @@ export class CodebaseTools {
       });
 
       // Sort by relevance and limit results
-      const references = scoredResults
+      return scoredResults
         .sort((a, b) => b.relevance - a.relevance)
         .slice(0, maxResults);
 
-      // Build context if requested
-      const context = includeContext ? {
-        topic: query,
-        relatedFiles: references.map(ref => ref.filePath),
-        patterns: Array.from(new Set(references.flatMap(ref => {
-          const metadata = results.find(r => r.filePath === ref.filePath)?.metadata as any;
-          return metadata?.patterns || [];
-        })))
-      } : undefined;
-
-      return {
-        references,
-        context: context || {}
-      };
     } catch (error) {
       console.error('Error finding code references:', error);
-      return { references: [], context: {} };
+      return [];
     }
   }
 
@@ -110,7 +96,16 @@ export class CodebaseTools {
         throw new Error(`File ${filePath} not found in codebase index`);
       }
 
-      const analysis = await this.analyzeCode(snippet.content, snippet.language);
+      // Analyze code structure
+      const analysis = {
+        imports: this.extractImports(snippet.content, snippet.language),
+        exports: this.extractExports(snippet.content, snippet.language),
+        dependencies: [],
+        description: this.generateDescription(snippet.content, snippet.language)
+      };
+
+      // Combine unique dependencies from imports
+      analysis.dependencies = Array.from(new Set(analysis.imports));
 
       return {
         content: snippet.content,
@@ -124,29 +119,46 @@ export class CodebaseTools {
   }
 
   /**
-   * Analyze code structure and dependencies
+   * Detect patterns in code and suggest improvements
    */
-  private static async analyzeCode(content: string, language: string): Promise<{
-    imports: string[];
-    exports: string[];
-    dependencies: string[];
-    description: string;
-  }> {
-    // Basic analysis based on regex patterns
-    const imports = this.extractImports(content, language);
-    const exports = this.extractExports(content, language);
-    
-    return {
-      imports,
-      exports,
-      dependencies: Array.from(new Set([...imports])),
-      description: this.generateDescription(content, language)
-    };
+  static async detectPatterns(code: string): Promise<CodePattern[]> {
+    // This is a simplified pattern detection
+    // In a real implementation, you would use more sophisticated analysis
+    const patterns: CodePattern[] = [];
+
+    // Example patterns to detect
+    if (code.includes('try') && code.includes('catch')) {
+      patterns.push({
+        name: 'Error Handling',
+        description: 'Implements try-catch error handling pattern',
+        confidence: 0.9,
+        suggestions: [
+          'Consider adding specific error types',
+          'Add error logging',
+          'Consider cleanup in finally block'
+        ]
+      });
+    }
+
+    if (code.includes('async') && code.includes('await')) {
+      patterns.push({
+        name: 'Async/Await',
+        description: 'Uses async/await pattern for asynchronous operations',
+        confidence: 0.9,
+        suggestions: [
+          'Consider adding error boundaries',
+          'Use Promise.all for parallel operations',
+          'Add timeout handling'
+        ]
+      });
+    }
+
+    return patterns;
   }
 
   private static extractImports(content: string, language: string): string[] {
     const imports: string[] = [];
-    
+
     switch(language) {
       case 'typescript':
       case 'javascript': {
@@ -172,7 +184,7 @@ export class CodebaseTools {
 
   private static extractExports(content: string, language: string): string[] {
     const exports: string[] = [];
-    
+
     switch(language) {
       case 'typescript':
       case 'javascript': {
@@ -197,9 +209,8 @@ export class CodebaseTools {
   }
 
   private static generateDescription(content: string, language: string): string {
-    // Extract comments and generate a basic description
     let description = '';
-    
+
     switch(language) {
       case 'typescript':
       case 'javascript': {

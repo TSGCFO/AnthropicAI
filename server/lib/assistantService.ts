@@ -1,6 +1,9 @@
 import { CodebaseTools } from './codebaseTools';
 import { ContextManager } from './contextManager';
 import { generateChatResponse } from './anthropic';
+import { db } from "@db";
+import { messages } from "@db/schema";
+import { eq } from "drizzle-orm";
 
 interface AssistantContext {
   topic?: string;
@@ -13,108 +16,169 @@ interface AssistantContext {
     patterns?: string[];
     description?: string;
   };
-  conversation?: {
-    history: Array<{
-      role: 'user' | 'assistant';
-      content: string;
-    }>;
-  };
+}
+
+interface ToolCall {
+  name: string;
+  args: Record<string, any>;
+}
+
+interface ToolResult {
+  type: string;
+  content: any;
 }
 
 export class AssistantService {
   /**
-   * Process a user message with enhanced codebase context
+   * Process a user message with enhanced codebase access through tools
    */
-  static async processMessage(
+  static async *processMessage(
     message: string,
     conversationId: number
-  ): Promise<AsyncGenerator<any, void, unknown>> {
+  ): AsyncGenerator<{ text: string }, void, unknown> {
     try {
-      // First, search for relevant code based on the message
-      const codeSearch = await CodebaseTools.findReferences(message, {
-        includeContext: true,
-        maxResults: 3
-      });
-
       // Get conversation context
       const conversationContext = await ContextManager.getConversationContext(
         conversationId
       );
 
-      // Build comprehensive context
-      const context: AssistantContext = {
-        topic: codeSearch.context.topic,
-        codeContext: {
-          relevantCode: codeSearch.references,
-          patterns: codeSearch.context.patterns,
-          description: 'Code references found based on user query'
-        },
-        conversation: {
-          history: conversationContext.relevantHistory
-        }
-      };
+      // Format the system prompt with tool descriptions
+      const systemPrompt = `You are an AI assistant with access to the LedgerLink codebase through these tools:
 
-      // For each referenced file, get detailed analysis
-      const fileAnalyses = await Promise.all(
-        codeSearch.references.map(ref => 
-          CodebaseTools.getFileDetails(ref.filePath)
-            .catch(() => null)
-        )
-      );
+TOOLS:
+- SEARCH_CODE(query: string) - Search codebase for relevant code
+- ANALYZE_FILE(filePath: string) - Get detailed file analysis
+- GET_PATTERNS(code: string) - Detect code patterns
 
-      // Format detailed prompt with code context
-      const systemPrompt = `You are an AI assistant with access to the LedgerLink codebase.
-Current topic: ${context.topic || 'General assistance'}
+To use a tool, output a JSON object like this:
+{
+  "name": "TOOL_NAME",
+  "args": {
+    "paramName": "value"
+  }
+}
 
-Relevant code from the codebase:
-${codeSearch.references.map((ref, i) => `
-File: ${ref.filePath}
-Language: ${ref.language}
-${fileAnalyses[i] ? `
-Analysis:
-- Imports: ${fileAnalyses[i]?.analysis.imports.join(', ')}
-- Exports: ${fileAnalyses[i]?.analysis.exports.join(', ')}
-- Dependencies: ${fileAnalyses[i]?.analysis.dependencies.join(', ')}
-- Description: ${fileAnalyses[i]?.analysis.description}
-` : ''}
-Code:
-\`\`\`${ref.language}
-${ref.content}
-\`\`\`
-`).join('\n')}
+After each tool call, I will provide the results and you can continue the conversation.
 
-Code patterns detected: ${context.codeContext?.patterns?.join(', ') || 'None'}
+Important:
+- Always search the codebase before answering questions
+- Reference specific files and code patterns
+- Explain architectural decisions with concrete examples
 
-Use this context to provide accurate and relevant responses about the codebase.
-Remember to reference specific files and code patterns in your explanations.
+Current conversation:
+${conversationContext.relevantHistory
+  .slice(-5)
+  .map(msg => `${msg.role}: ${msg.content}`)
+  .join('\n')}
 `;
 
-      // Generate response stream
+      let fullResponse = '';
       const messages = [
         { role: 'system', content: systemPrompt },
-        ...conversationContext.relevantHistory.map(msg => ({
-          role: msg.role,
-          content: msg.content
-        })),
         { role: 'user', content: message }
       ];
 
-      // Update conversation context with code references
-      await ContextManager.updateContext(conversationId, {
-        topic: context.topic,
-        codeContext: {
-          relevantFiles: codeSearch.references.map(ref => ({
-            path: ref.filePath,
-            snippet: ref.content,
-            description: fileAnalyses.find(a => a?.content === ref.content)?.analysis.description || ''
-          }))
+      const stream = await generateChatResponse(messages);
+
+      for await (const chunk of stream) {
+        if (!chunk.content?.[0]?.text) continue;
+
+        const text = chunk.content[0].text;
+
+        // Check for tool call
+        const toolCall = this.parseToolCall(text);
+        if (toolCall) {
+          try {
+            const result = await this.executeToolCall(toolCall);
+
+            // Add tool result to conversation
+            messages.push(
+              { role: 'assistant', content: text },
+              { role: 'system', content: `Tool result: ${JSON.stringify(result)}` }
+            );
+
+            // Get continuation 
+            const continuationStream = await generateChatResponse(messages);
+            for await (const continuationChunk of continuationStream) {
+              if (continuationChunk.content?.[0]?.text) {
+                const continuationText = continuationChunk.content[0].text;
+                fullResponse += continuationText;
+                yield { text: continuationText };
+              }
+            }
+          } catch (error) {
+            console.error('Tool execution error:', error);
+            yield { text: `\nError executing tool: ${error instanceof Error ? error.message : 'Unknown error'}\n` };
+          }
+        } else {
+          fullResponse += text;
+          yield { text };
         }
+      }
+
+      // Save assistant message
+      await db.insert(messages).values({
+        conversationId,
+        role: "assistant",
+        content: fullResponse,
+        contextSnapshot: {}
       });
 
-      return generateChatResponse(messages);
     } catch (error) {
       console.error('Error processing message:', error);
       throw error;
+    }
+  }
+
+  private static parseToolCall(text: string): ToolCall | null {
+    try {
+      if (text.includes('"name":')) {
+        const match = text.match(/\{[^}]+\}/);
+        if (match) {
+          const parsed = JSON.parse(match[0]);
+          if (parsed.name && parsed.args) {
+            return {
+              name: parsed.name,
+              args: parsed.args
+            };
+          }
+        }
+      }
+      return null;
+    } catch (error) {
+      console.error('Error parsing tool call:', error);
+      return null;
+    }
+  }
+
+  private static async executeToolCall(toolCall: ToolCall): Promise<ToolResult> {
+    switch (toolCall.name) {
+      case 'SEARCH_CODE':
+        const searchResults = await CodebaseTools.findReferences(
+          toolCall.args.query,
+          { maxResults: 3 }
+        );
+        return {
+          type: 'code_search_results',
+          content: searchResults
+        };
+
+      case 'ANALYZE_FILE':
+        const analysis = await CodebaseTools.getFileDetails(toolCall.args.filePath);
+        return {
+          type: 'file_analysis',
+          content: analysis
+        };
+
+      case 'GET_PATTERNS':
+        const patterns = await CodebaseTools.detectPatterns(toolCall.args.code);
+        return {
+          type: 'pattern_detection',
+          content: patterns
+        };
+
+      default:
+        throw new Error(`Unknown tool: ${toolCall.name}`);
     }
   }
 }
