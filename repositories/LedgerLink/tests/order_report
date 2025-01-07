@@ -1,0 +1,3085 @@
+Billing Report:
+{
+  "customer_id": 1,
+  "start_date": "2024-03-01T00:00:00+00:00",
+  "end_date": "2024-03-15T00:00:00+00:00",
+  "orders": [
+    {
+      "order_id": 159653,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "10.00"
+        }
+      ],
+      "total_amount": "10.00"
+    },
+    {
+      "order_id": 159749,
+      "services": [
+        {
+          "service_id": 1,
+          "service_name": "B2B Base",
+          "amount": "6.50"
+        },
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "24.00"
+        }
+      ],
+      "total_amount": "30.50"
+    },
+    {
+      "order_id": 159750,
+      "services": [
+        {
+          "service_id": 1,
+          "service_name": "B2B Base",
+          "amount": "6.50"
+        },
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "24.00"
+        }
+      ],
+      "total_amount": "30.50"
+    },
+    {
+      "order_id": 158685,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158469,
+      "services": [
+        {
+          "service_id": 1,
+          "service_name": "B2B Base",
+          "amount": "6.50"
+        },
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "4020.00"
+        }
+      ],
+      "total_amount": "4026.50"
+    },
+    {
+      "order_id": 158570,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "7.00"
+        }
+      ],
+      "total_amount": "7.00"
+    },
+    {
+      "order_id": 158633,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158634,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158642,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158650,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158654,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158655,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158662,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158663,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158664,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158668,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158673,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "12.00"
+        }
+      ],
+      "total_amount": "12.00"
+    },
+    {
+      "order_id": 158675,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158676,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158677,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158678,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "3.00"
+        }
+      ],
+      "total_amount": "3.00"
+    },
+    {
+      "order_id": 158679,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158680,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158681,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158682,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158686,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158687,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158693,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158694,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "2.00"
+        }
+      ],
+      "total_amount": "2.00"
+    },
+    {
+      "order_id": 158698,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158699,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158711,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "13.00"
+        }
+      ],
+      "total_amount": "13.00"
+    },
+    {
+      "order_id": 158751,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "6.00"
+        }
+      ],
+      "total_amount": "6.00"
+    },
+    {
+      "order_id": 158753,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "8.00"
+        }
+      ],
+      "total_amount": "8.00"
+    },
+    {
+      "order_id": 158754,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158771,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "2.00"
+        }
+      ],
+      "total_amount": "2.00"
+    },
+    {
+      "order_id": 158774,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158777,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158781,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158783,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158787,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158788,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158789,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158790,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158791,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158793,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158798,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158799,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158800,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "2.00"
+        }
+      ],
+      "total_amount": "2.00"
+    },
+    {
+      "order_id": 158804,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158809,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158813,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158818,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158823,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158824,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158827,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158829,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158830,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158831,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158832,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158836,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158837,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158839,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158840,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158841,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158842,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158843,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158847,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158848,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158849,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158855,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158857,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "7.00"
+        }
+      ],
+      "total_amount": "7.00"
+    },
+    {
+      "order_id": 158858,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "12.00"
+        }
+      ],
+      "total_amount": "12.00"
+    },
+    {
+      "order_id": 158860,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158861,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158863,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158868,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158872,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158876,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158877,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158884,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158885,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158887,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158888,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158890,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158891,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158896,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158898,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158900,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158901,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158902,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158906,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158907,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158910,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158913,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158915,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158916,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "2.00"
+        }
+      ],
+      "total_amount": "2.00"
+    },
+    {
+      "order_id": 158917,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158918,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158921,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158922,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158923,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158926,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158927,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158942,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "2.00"
+        }
+      ],
+      "total_amount": "2.00"
+    },
+    {
+      "order_id": 158943,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "2.00"
+        }
+      ],
+      "total_amount": "2.00"
+    },
+    {
+      "order_id": 158944,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158950,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158951,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158952,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158959,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158961,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158966,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158967,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158969,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158970,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158972,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158973,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "2.00"
+        }
+      ],
+      "total_amount": "2.00"
+    },
+    {
+      "order_id": 158977,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158979,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158982,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158983,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158984,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158985,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158986,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158987,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158988,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158993,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 158999,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159000,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159003,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159004,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159006,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159007,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159014,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159015,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159019,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159020,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159021,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159022,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159023,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159024,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "8.00"
+        }
+      ],
+      "total_amount": "8.00"
+    },
+    {
+      "order_id": 159025,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159027,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159028,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159029,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159030,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "2.00"
+        }
+      ],
+      "total_amount": "2.00"
+    },
+    {
+      "order_id": 159055,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159070,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "6.00"
+        }
+      ],
+      "total_amount": "6.00"
+    },
+    {
+      "order_id": 159072,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159080,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159092,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159114,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159122,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159140,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159143,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "3.00"
+        }
+      ],
+      "total_amount": "3.00"
+    },
+    {
+      "order_id": 159150,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "15.00"
+        }
+      ],
+      "total_amount": "15.00"
+    },
+    {
+      "order_id": 159397,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "3.00"
+        }
+      ],
+      "total_amount": "3.00"
+    },
+    {
+      "order_id": 159156,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "7.00"
+        }
+      ],
+      "total_amount": "7.00"
+    },
+    {
+      "order_id": 159166,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159197,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "12.00"
+        }
+      ],
+      "total_amount": "12.00"
+    },
+    {
+      "order_id": 159219,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "6.00"
+        }
+      ],
+      "total_amount": "6.00"
+    },
+    {
+      "order_id": 159228,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159231,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "4.00"
+        }
+      ],
+      "total_amount": "4.00"
+    },
+    {
+      "order_id": 159252,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159257,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "2.00"
+        }
+      ],
+      "total_amount": "2.00"
+    },
+    {
+      "order_id": 159260,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "7.00"
+        }
+      ],
+      "total_amount": "7.00"
+    },
+    {
+      "order_id": 159266,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159273,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159275,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "8.00"
+        }
+      ],
+      "total_amount": "8.00"
+    },
+    {
+      "order_id": 159277,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "12.00"
+        }
+      ],
+      "total_amount": "12.00"
+    },
+    {
+      "order_id": 159281,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "5.00"
+        }
+      ],
+      "total_amount": "5.00"
+    },
+    {
+      "order_id": 159282,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159291,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159305,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "2.00"
+        }
+      ],
+      "total_amount": "2.00"
+    },
+    {
+      "order_id": 159312,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159317,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "12.00"
+        }
+      ],
+      "total_amount": "12.00"
+    },
+    {
+      "order_id": 159323,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159324,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "6.00"
+        }
+      ],
+      "total_amount": "6.00"
+    },
+    {
+      "order_id": 159329,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "2.00"
+        }
+      ],
+      "total_amount": "2.00"
+    },
+    {
+      "order_id": 159344,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "7.00"
+        }
+      ],
+      "total_amount": "7.00"
+    },
+    {
+      "order_id": 159362,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159370,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159371,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "3.00"
+        }
+      ],
+      "total_amount": "3.00"
+    },
+    {
+      "order_id": 159381,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159392,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159398,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159415,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159429,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159431,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "6.00"
+        }
+      ],
+      "total_amount": "6.00"
+    },
+    {
+      "order_id": 159444,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159445,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159456,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159458,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159461,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159463,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159493,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159503,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "12.00"
+        }
+      ],
+      "total_amount": "12.00"
+    },
+    {
+      "order_id": 159514,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159515,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159517,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159523,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159557,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159571,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159585,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "6.00"
+        }
+      ],
+      "total_amount": "6.00"
+    },
+    {
+      "order_id": 159592,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "9.00"
+        }
+      ],
+      "total_amount": "9.00"
+    },
+    {
+      "order_id": 159594,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "7.00"
+        }
+      ],
+      "total_amount": "7.00"
+    },
+    {
+      "order_id": 159595,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159611,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159612,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "5.00"
+        }
+      ],
+      "total_amount": "5.00"
+    },
+    {
+      "order_id": 159613,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159615,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "2.00"
+        }
+      ],
+      "total_amount": "2.00"
+    },
+    {
+      "order_id": 159616,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "8.00"
+        }
+      ],
+      "total_amount": "8.00"
+    },
+    {
+      "order_id": 159619,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "5.00"
+        }
+      ],
+      "total_amount": "5.00"
+    },
+    {
+      "order_id": 159647,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159649,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "8.00"
+        }
+      ],
+      "total_amount": "8.00"
+    },
+    {
+      "order_id": 159672,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "2.00"
+        }
+      ],
+      "total_amount": "2.00"
+    },
+    {
+      "order_id": 159683,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159686,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159697,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "12.00"
+        }
+      ],
+      "total_amount": "12.00"
+    },
+    {
+      "order_id": 159698,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159721,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "2.00"
+        }
+      ],
+      "total_amount": "2.00"
+    },
+    {
+      "order_id": 159724,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "10.00"
+        }
+      ],
+      "total_amount": "10.00"
+    },
+    {
+      "order_id": 159726,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "5.00"
+        }
+      ],
+      "total_amount": "5.00"
+    },
+    {
+      "order_id": 159728,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "4.00"
+        }
+      ],
+      "total_amount": "4.00"
+    },
+    {
+      "order_id": 159730,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159736,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "6.00"
+        }
+      ],
+      "total_amount": "6.00"
+    },
+    {
+      "order_id": 159747,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159756,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "3.00"
+        }
+      ],
+      "total_amount": "3.00"
+    },
+    {
+      "order_id": 159762,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "12.00"
+        }
+      ],
+      "total_amount": "12.00"
+    },
+    {
+      "order_id": 159768,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159781,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159784,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159811,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159818,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "1.00"
+        }
+      ],
+      "total_amount": "1.00"
+    },
+    {
+      "order_id": 159789,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "30.00"
+        }
+      ],
+      "total_amount": "30.00"
+    },
+    {
+      "order_id": 159058,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "5.00"
+        }
+      ],
+      "total_amount": "5.00"
+    },
+    {
+      "order_id": 159652,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "5.00"
+        }
+      ],
+      "total_amount": "5.00"
+    },
+    {
+      "order_id": 159654,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "7.00"
+        }
+      ],
+      "total_amount": "7.00"
+    },
+    {
+      "order_id": 159655,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "5.00"
+        }
+      ],
+      "total_amount": "5.00"
+    },
+    {
+      "order_id": 159656,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "5.00"
+        }
+      ],
+      "total_amount": "5.00"
+    },
+    {
+      "order_id": 159183,
+      "services": [
+        {
+          "service_id": 1,
+          "service_name": "B2B Base",
+          "amount": "6.50"
+        },
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "36.00"
+        }
+      ],
+      "total_amount": "42.50"
+    },
+    {
+      "order_id": 159651,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "12.00"
+        }
+      ],
+      "total_amount": "12.00"
+    },
+    {
+      "order_id": 159059,
+      "services": [
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "36.00"
+        }
+      ],
+      "total_amount": "36.00"
+    },
+    {
+      "order_id": 159369,
+      "services": [
+        {
+          "service_id": 1,
+          "service_name": "B2B Base",
+          "amount": "6.50"
+        },
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "84.00"
+        }
+      ],
+      "total_amount": "90.50"
+    },
+    {
+      "order_id": 158581,
+      "services": [
+        {
+          "service_id": 1,
+          "service_name": "B2B Base",
+          "amount": "6.50"
+        },
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "72.00"
+        }
+      ],
+      "total_amount": "78.50"
+    },
+    {
+      "order_id": 158319,
+      "services": [
+        {
+          "service_id": 1,
+          "service_name": "B2B Base",
+          "amount": "6.50"
+        },
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "48.00"
+        }
+      ],
+      "total_amount": "54.50"
+    },
+    {
+      "order_id": 158357,
+      "services": [
+        {
+          "service_id": 1,
+          "service_name": "B2B Base",
+          "amount": "6.50"
+        },
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "36.00"
+        }
+      ],
+      "total_amount": "42.50"
+    },
+    {
+      "order_id": 158359,
+      "services": [
+        {
+          "service_id": 1,
+          "service_name": "B2B Base",
+          "amount": "6.50"
+        },
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "36.00"
+        }
+      ],
+      "total_amount": "42.50"
+    },
+    {
+      "order_id": 158522,
+      "services": [
+        {
+          "service_id": 1,
+          "service_name": "B2B Base",
+          "amount": "6.50"
+        },
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "36.00"
+        }
+      ],
+      "total_amount": "42.50"
+    },
+    {
+      "order_id": 158645,
+      "services": [
+        {
+          "service_id": 1,
+          "service_name": "B2B Base",
+          "amount": "6.50"
+        },
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "48.00"
+        }
+      ],
+      "total_amount": "54.50"
+    },
+    {
+      "order_id": 158745,
+      "services": [
+        {
+          "service_id": 1,
+          "service_name": "B2B Base",
+          "amount": "6.50"
+        },
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "48.00"
+        }
+      ],
+      "total_amount": "54.50"
+    },
+    {
+      "order_id": 158748,
+      "services": [
+        {
+          "service_id": 1,
+          "service_name": "B2B Base",
+          "amount": "6.50"
+        },
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "108.00"
+        }
+      ],
+      "total_amount": "114.50"
+    },
+    {
+      "order_id": 158764,
+      "services": [
+        {
+          "service_id": 1,
+          "service_name": "B2B Base",
+          "amount": "6.50"
+        },
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "48.00"
+        }
+      ],
+      "total_amount": "54.50"
+    },
+    {
+      "order_id": 158769,
+      "services": [
+        {
+          "service_id": 1,
+          "service_name": "B2B Base",
+          "amount": "6.50"
+        },
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "12.00"
+        }
+      ],
+      "total_amount": "18.50"
+    },
+    {
+      "order_id": 158797,
+      "services": [
+        {
+          "service_id": 1,
+          "service_name": "B2B Base",
+          "amount": "6.50"
+        },
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "48.00"
+        }
+      ],
+      "total_amount": "54.50"
+    },
+    {
+      "order_id": 158880,
+      "services": [
+        {
+          "service_id": 1,
+          "service_name": "B2B Base",
+          "amount": "6.50"
+        },
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "72.00"
+        }
+      ],
+      "total_amount": "78.50"
+    },
+    {
+      "order_id": 159062,
+      "services": [
+        {
+          "service_id": 1,
+          "service_name": "B2B Base",
+          "amount": "6.50"
+        },
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "24.00"
+        }
+      ],
+      "total_amount": "30.50"
+    },
+    {
+      "order_id": 159138,
+      "services": [
+        {
+          "service_id": 1,
+          "service_name": "B2B Base",
+          "amount": "6.50"
+        },
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "36.00"
+        }
+      ],
+      "total_amount": "42.50"
+    },
+    {
+      "order_id": 159244,
+      "services": [
+        {
+          "service_id": 1,
+          "service_name": "B2B Base",
+          "amount": "6.50"
+        },
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "36.00"
+        }
+      ],
+      "total_amount": "42.50"
+    },
+    {
+      "order_id": 159287,
+      "services": [
+        {
+          "service_id": 1,
+          "service_name": "B2B Base",
+          "amount": "6.50"
+        },
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "84.00"
+        }
+      ],
+      "total_amount": "90.50"
+    },
+    {
+      "order_id": 159551,
+      "services": [
+        {
+          "service_id": 1,
+          "service_name": "B2B Base",
+          "amount": "6.50"
+        },
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "84.00"
+        }
+      ],
+      "total_amount": "90.50"
+    },
+    {
+      "order_id": 159635,
+      "services": [
+        {
+          "service_id": 1,
+          "service_name": "B2B Base",
+          "amount": "6.50"
+        },
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "36.00"
+        }
+      ],
+      "total_amount": "42.50"
+    },
+    {
+      "order_id": 159668,
+      "services": [
+        {
+          "service_id": 1,
+          "service_name": "B2B Base",
+          "amount": "6.50"
+        },
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "36.00"
+        }
+      ],
+      "total_amount": "42.50"
+    },
+    {
+      "order_id": 159719,
+      "services": [
+        {
+          "service_id": 1,
+          "service_name": "B2B Base",
+          "amount": "6.50"
+        },
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "60.00"
+        }
+      ],
+      "total_amount": "66.50"
+    },
+    {
+      "order_id": 159763,
+      "services": [
+        {
+          "service_id": 1,
+          "service_name": "B2B Base",
+          "amount": "6.50"
+        },
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "39.00"
+        }
+      ],
+      "total_amount": "45.50"
+    },
+    {
+      "order_id": 159096,
+      "services": [
+        {
+          "service_id": 1,
+          "service_name": "B2B Base",
+          "amount": "6.50"
+        },
+        {
+          "service_id": 38,
+          "service_name": "SKU cost",
+          "amount": "0.00"
+        }
+      ],
+      "total_amount": "6.50"
+    }
+  ],
+  "service_totals": {
+    "38": "5864.00",
+    "1": "175.50"
+  },
+  "total_amount": "6039.50"
+}

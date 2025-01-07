@@ -1,0 +1,49 @@
+<!-- Main/templates/components/sidebar.html -->
+<div class="h-full overflow-y-auto sidebar-scroll">
+    <nav class="mt-5 px-2">
+        <a href="{% url 'main:dashboard' %}"
+           class="group flex items-center px-2 py-2 text-base font-medium rounded-md {% if request.resolver_match.url_name == 'dashboard' %}bg-gray-100 text-gray-900{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %}">
+            <i class="bi bi-house-door me-2"></i>
+            Dashboard
+        </a>
+
+        <a href="{% url 'products:product_list' %}"
+           class="mt-1 group flex items-center px-2 py-2 text-base font-medium rounded-md {% if 'products' in request.path %}bg-gray-100 text-gray-900{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %}">
+            <i class="bi bi-box me-2"></i>
+            Products
+        </a>
+
+        <a href="{% url 'orders:order_list' %}"
+           class="mt-1 group flex items-center px-2 py-2 text-base font-medium rounded-md {% if 'orders' in request.path %}bg-gray-100 text-gray-900{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %}">
+            <i class="bi bi-cart me-2"></i>
+            Orders
+        </a>
+
+        <a href="{% url 'customer_services:customer_service_list' %}"
+           class="mt-1 group flex items-center px-2 py-2 text-base font-medium rounded-md {% if 'customer_services' in request.path %}bg-gray-100 text-gray-900{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %}">
+            <i class="bi bi-gear-fill me-2"></i>
+            Customer Services
+        </a>
+
+        <!-- Add this section to your existing sidebar navigation -->
+            <a href="{% url 'rules:rule_group_list' %}" class="mt-1 group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900 {% if request.resolver_match.namespace == 'rules' %}active{% endif %}">
+                <i class="bi bi-diagram-3"></i>
+                <span>Rules</span>
+            </a>
+
+        {% comment %}
+        <!-- Temporarily comment out until services views are implemented -->
+        <a href="{% url 'services:service_list' %}"
+           class="mt-1 group flex items-center px-2 py-2 text-base font-medium rounded-md {% if 'services' in request.path %}bg-gray-100 text-gray-900{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %}">
+            <i class="bi bi-gear me-2"></i>
+            Services
+        </a>
+        {% endcomment %}
+
+        <a href="{% url 'billing:report' %}"
+           class="mt-1 group flex items-center px-2 py-2 text-base font-medium rounded-md {% if 'billing' in request.path %}bg-gray-100 text-gray-900{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %}">
+            <i class="bi bi-file-text me-2"></i>
+            Billing Reports
+        </a>
+    </nav>
+</div>

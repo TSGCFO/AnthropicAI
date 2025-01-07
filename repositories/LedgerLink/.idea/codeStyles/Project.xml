@@ -1,0 +1,14 @@
+<component name="ProjectCodeStyleConfiguration">
+  <code_scheme name="Project" version="173">
+    <Markdown>
+      <option name="MIN_LINES_BETWEEN_PARAGRAPHS" value="2" />
+    </Markdown>
+    <codeStyleSettings language="Markdown">
+      <option name="RIGHT_MARGIN" value="160" />
+      <option name="WRAP_ON_TYPING" value="1" />
+      <indentOptions>
+        <option name="USE_TAB_CHARACTER" value="true" />
+      </indentOptions>
+    </codeStyleSettings>
+  </code_scheme>
+</component>

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+  <title>{% block title %}Insert Form{% endblock %}</title>
+</head>
+<body>
+    <h1>{% block heading %}Insert Form{% endblock %}</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Save</button>
+    </form>
+    <a href="{% url 'insert_list' %}">Back to Insert List</a>
+</body>
+</html>

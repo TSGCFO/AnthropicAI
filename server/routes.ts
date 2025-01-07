@@ -53,6 +53,11 @@ export function registerRoutes(app: Express): Server {
       // Clone the repository
       await execAsync(`git clone ${repoUrl} ${repoPath}`);
 
+      // Index the newly cloned repository
+      console.log('Starting to index the cloned repository...');
+      await indexCodebase();
+      console.log('Repository indexing completed.');
+
       res.json({ success: true, repoName });
     } catch (error) {
       console.error('Error cloning repository:', error);

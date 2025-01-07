@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+<title>Delete Box Price</title>
+</head>
+<body>
+    <h1>Delete Box Price</h1>
+    <p>Are you sure you want to delete "{{ boxprice.box_type }}"?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">Confirm</button>
+    </form>
+    <a href="{% url 'boxprice_list' %}">Back to Box Price List</a>
+</body>
+</html>

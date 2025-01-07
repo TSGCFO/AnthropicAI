@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+   <title>Box Prices List</title>
+</head>
+<body>
+    <h1>Box Prices List</h1>
+    <a href="{% url 'boxprice_create' %}">Add New Box Price</a>
+    <ul>
+        {% for boxprice in boxprices %}
+            <li>
+                <a href="{% url 'boxprice_detail' boxprice.pk %}">{{ boxprice.box_type }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

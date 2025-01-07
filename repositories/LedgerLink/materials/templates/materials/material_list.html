@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Materials List</title>
+</head>
+<body>
+    <h1>Materials List</h1>
+    <a href="{% url 'material_create' %}">Add New Material</a>
+    <ul>
+        {% for material in materials %}
+            <li>
+                <a href="{% url 'material_detail' material.pk %}">{{ material.name }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

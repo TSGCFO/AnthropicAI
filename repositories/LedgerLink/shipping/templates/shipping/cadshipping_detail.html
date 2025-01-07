@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CAD Shipping Detail</title>
+</head>
+<body>
+    <h1>{{ cadshipping }}</h1>
+    <p><strong>Transaction:</strong> {{ cadshipping.transaction }}</p>
+    <p><strong>Customer:</strong> {{ cadshipping.customer }}</p>
+    <p><strong>Service Code Description:</strong> {{ cadshipping.service_code_description }}</p>
+    <p><strong>Ship To Name:</strong> {{ cadshipping.ship_to_name }}</p>
+    <p><strong>Ship To Address 1:</strong> {{ cadshipping.ship_to_address_1 }}</p>
+    <p><strong>Ship To Address 2:</strong> {{ cadshipping.ship_to_address_2 }}</p>
+    <p><strong>Ship To City:</strong> {{ cadshipping.ship_to_city }}</p>
+    <p><strong>Ship To State:</strong> {{ cadshipping.ship_to_state }}</p>
+    <p><strong>Ship To Country:</strong> {{ cadshipping.ship_to_country }}</p>
+    <p><strong>Ship To Postal Code:</strong> {{ cadshipping.ship_to_postal_code }}</p>
+    <p><strong>Tracking Number:</strong> {{ cadshipping.tracking_number }}</p>
+    <p><strong>Pre-Tax Shipping Charge:</strong> {{ cadshipping.pre_tax_shipping_charge }}</p>
+    <p><strong>Tax 1 Type:</strong> {{ cadshipping.tax1type }}</p>
+    <p><strong>Tax 1 Amount:</strong> {{ cadshipping.tax1amount }}</p>
+    <p><strong>Tax 2 Type:</strong> {{ cadshipping.tax2type }}</p>
+    <p><strong>Tax 2 Amount:</strong> {{ cadshipping.tax2amount }}</p>
+    <p><strong>Tax 3 Type:</strong> {{ cadshipping.tax3type }}</p>
+    <p><strong>Tax 3 Amount:</strong> {{ cadshipping.tax3amount }}</p>
+    <p><strong>Fuel Surcharge:</strong> {{ cadshipping.fuel_surcharge }}</p>
+    <p><strong>Reference:</strong> {{ cadshipping.reference }}</p>
+    <p><strong>Weight:</strong> {{ cadshipping.weight }}</p>
+    <p><strong>Gross Weight:</strong> {{ cadshipping.gross_weight }}</p>
+    <p><strong>Box Length:</strong> {{ cadshipping.box_length }}</p>
+    <p><strong>Box Width:</strong> {{ cadshipping.box_width }}</p>
+    <p><strong>Box Height:</strong> {{ cadshipping.box_height }}</p>
+    <p><strong>Box Name:</strong> {{ cadshipping.box_name }}</p>
+    <p><strong>Ship Date:</strong> {{ cadshipping.ship_date }}</p>
+    <p><strong>Carrier:</strong> {{ cadshipping.carrier }}</p>
+    <p><strong>Raw Ship Date:</strong> {{ cadshipping.raw_ship_date }}</p>
+    <a href="{% url 'cadshipping_update' cadshipping.pk %}">Edit</a> |
+    <a href="{% url 'cadshipping_delete' cadshipping.pk %}">Delete</a>
+    <br>
+    <a href="{% url 'cadshipping_list' %}">Back to CAD Shipping List</a>
+</body>
+</html>

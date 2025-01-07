@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Customer Service - LedgerLink{% endblock %}
+
+{% block extra_css %}
+    <style>
+        .warning-icon {
+            font-size: 3rem;
+            color: var(--danger-color);
+        }
+
+        .service-info {
+            background-color: #f8f9fa;
+            border-radius: 0.25rem;
+            padding: 1rem;
+        }
+
+        .sku-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .delete-warning {
+            border-left: 4px solid var(--danger-color);
+            padding-left: 1rem;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid py-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <div>
+                <h1 class="h2">Delete Customer Service</h1>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'customer_services:list' %}">Customer Services</a></li>
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'customer_services:detail' customer_service.pk %}">Details</a>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">Delete</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="text-center mb-4">
+                            <i class="bi bi-exclamation-triangle warning-icon"></i>
+                            <h4 class="mt-3">Delete Customer Service?</h4>
+                        </div>
+
+                        <div class="delete-warning mb-4">
+                            <h5 class="text-danger">Warning</h5>
+                            <p class="mb-0">This action cannot be undone. This will permanently delete the customer service
+                                and remove all associated data.</p>
+                        </div>
+
+                        <!-- Service Information -->
+                        <div class="service-info mb-4">
+                            <h5>Service Details</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <dl>
+                                        <dt>Customer</dt>
+                                        <dd>{{ customer_service.customer.company_name }}</dd>
+
+                                        <dt>Service</dt>
+                                        <dd>{{ customer_service.service.service_name }}</dd>
+                                    </dl>
+                                </div>
+                                <div class="col-md-6">
+                                    <dl>
+                                        <dt>Unit Price</dt>
+                                        <dd>${{ customer_service.unit_price }}</dd>
+
+                                        <dt>Created</dt>
+                                        <dd>{{ customer_service.created_at|date:"M d, Y" }}</dd>
+                                    </dl>
+                                </div>
+                            </div>
+
+                            {% if customer_service.skus.exists %}
+                                <div class="mt-3">
+                                    <h6>Associated SKUs ({{ customer_service.skus.count }})</h6>
+                                    <div class="sku-list">
+                                        <ul class="list-unstyled mb-0">
+                                            {% for sku in customer_service.skus.all %}
+                                                <li>{{ sku.sku }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Confirmation Form -->
+                        <form method="post" class="text-center">
+                            {% csrf_token %}
+
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="confirmDelete" required>
+                                <label class="form-check-label" for="confirmDelete">
+                                    I understand that this action cannot be undone
+                                </label>
+                            </div>
+
+                            <div class="d-flex justify-content-center gap-2">
+                                <a href="{% url 'customer_services:detail' customer_service.pk %}"
+                                   class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-circle"></i> Cancel
+                                </a>
+                                <button type="submit"
+                                        class="btn btn-danger"
+                                        id="deleteButton"
+                                        disabled>
+                                    <i class="bi bi-trash"></i> Delete Customer Service
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                {% if billing_info %}
+                    <!-- Additional Warning Card -->
+                    <div class="card mt-4 border-warning">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="card-title mb-0">
+                                <i class="bi bi-exclamation-circle me-2"></i>Billing Information
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-0">
+                                This service is currently being used in billing calculations.
+                                Deleting it may affect historical billing records and future calculations.
+                            </p>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const confirmCheckbox = document.getElementById('confirmDelete');
+            const deleteButton = document.getElementById('deleteButton');
+
+            confirmCheckbox?.addEventListener('change', function() {
+                deleteButton.disabled = !this.checked;
+            });
+
+            // Form submission confirmation
+            const form = document.querySelector('form');
+            form?.addEventListener('submit', function(e) {
+                if (!confirmCheckbox.checked) {
+                    e.preventDefault();
+                    alert('Please confirm that you understand this action cannot be undone.');
+                    return;
+                }
+            });
+        });
+    </script>
+{% endblock %}

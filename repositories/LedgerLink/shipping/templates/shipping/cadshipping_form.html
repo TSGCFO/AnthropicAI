@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CAD Shipping Form</title>
+</head>
+<body>
+    <h1>CAD Shipping Form</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Save</button>
+    </form>
+    <a href="{% url 'cadshipping_list' %}">Back to CAD Shipping List</a>
+</body>
+</html>
