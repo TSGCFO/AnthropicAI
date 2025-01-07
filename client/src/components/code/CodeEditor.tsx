@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,18 +30,23 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [reconnectAttempt, setReconnectAttempt] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout>();
   const { toast } = useToast();
 
-  useEffect(() => {
-    // Determine WebSocket protocol based on page protocol
+  const connectWebSocket = useCallback(() => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) return;
+
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const ws = new WebSocket(`${protocol}//${window.location.host}/ws/codeai`);
 
     ws.onopen = () => {
       console.log("Connected to Code AI WebSocket");
+      setIsConnected(true);
+      setReconnectAttempt(0);
       toast({
         title: "Connected",
         description: "Connected to Code AI service",
@@ -69,21 +74,44 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
 
     ws.onerror = (error) => {
       console.error('WebSocket error:', error);
-      toast({
-        title: "Connection Error",
-        description: "Failed to connect to code assistance service",
-        variant: "destructive",
-      });
+      setIsConnected(false);
+    };
+
+    ws.onclose = () => {
+      console.log('WebSocket connection closed');
+      setIsConnected(false);
+
+      // Implement exponential backoff for reconnection
+      const maxReconnectAttempts = 5;
+      const baseDelay = 1000; // 1 second
+
+      if (reconnectAttempt < maxReconnectAttempts) {
+        const delay = Math.min(baseDelay * Math.pow(2, reconnectAttempt), 30000); // Max 30 seconds
+        setTimeout(() => {
+          setReconnectAttempt(prev => prev + 1);
+          connectWebSocket();
+        }, delay);
+      } else {
+        toast({
+          title: "Connection Failed",
+          description: "Unable to connect to code assistance service. Please refresh the page.",
+          variant: "destructive",
+        });
+      }
     };
 
     wsRef.current = ws;
+  }, [toast, reconnectAttempt]);
+
+  useEffect(() => {
+    connectWebSocket();
 
     return () => {
       if (wsRef.current?.readyState === WebSocket.OPEN) {
         wsRef.current.close();
       }
     };
-  }, [toast]);
+  }, [connectWebSocket]);
 
   const requestAnalysis = async () => {
     try {
@@ -221,26 +249,51 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
       return;
     }
 
+    if (!isConnected) {
+      toast({
+        title: "Not Connected",
+        description: "Waiting for connection to Code AI service...",
+        variant: "destructive",
+      });
+      connectWebSocket();
+      return;
+    }
+
     try {
       setIsLoading(true);
-      const response = await fetch('/api/code/suggest', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          code,
-          language,
-          cursor: code.length,
-        }),
-      });
 
-      if (!response.ok) {
-        throw new Error('Failed to get code suggestion');
+      // Try WebSocket first for real-time suggestions
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({
+          type: 'suggestion',
+          content: {
+            code,
+            language,
+            cursor: code.length,
+          }
+        }));
+      } else {
+        // Fallback to REST API if WebSocket is not available
+        const response = await fetch('/api/code/suggest', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            code,
+            language,
+            cursor: code.length,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to get code suggestion');
+        }
+
+        const data = await response.json();
+        setSuggestions(data.suggestion);
       }
 
-      const data = await response.json();
-      setSuggestions(data.suggestion);
       await requestAnalysis();
       await requestExplanation();
     } catch (error) {
@@ -293,6 +346,11 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
             {fileName && (
               <span className="text-sm text-muted-foreground">
                 {fileName}
+              </span>
+            )}
+            {!isConnected && (
+              <span className="text-sm text-red-500">
+                (Disconnected)
               </span>
             )}
           </div>
