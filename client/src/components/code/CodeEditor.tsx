@@ -18,8 +18,9 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
   const { toast } = useToast();
 
   useEffect(() => {
-    // Connect to WebSocket server
-    const ws = new WebSocket(`ws://${window.location.host}/ws/codeai`);
+    // Determine WebSocket protocol based on page protocol
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const ws = new WebSocket(`${protocol}//${window.location.host}/ws/codeai`);
 
     ws.onopen = () => {
       console.log("Connected to Code AI WebSocket");
@@ -56,21 +57,50 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
     wsRef.current = ws;
 
     return () => {
-      ws.close();
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        wsRef.current.close();
+      }
     };
   }, [toast]);
 
-  const requestSuggestion = () => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
+  const requestSuggestion = async () => {
+    if (!code.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter some code first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
       setIsLoading(true);
-      wsRef.current.send(JSON.stringify({
-        type: 'suggestion',
-        content: {
+      const response = await fetch('/api/code/suggest', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           code,
           language,
           cursor: code.length,
-        },
-      }));
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get code suggestion');
+      }
+
+      const data = await response.json();
+      setSuggestions(data.suggestion);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -99,7 +129,7 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
             )}
           </Button>
         </div>
-        
+
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <textarea
