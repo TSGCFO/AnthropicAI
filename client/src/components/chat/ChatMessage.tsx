@@ -4,6 +4,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar } from "@/components/ui/avatar";
 import { User, Bot } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Button } from "@/components/ui/button";
+import { ChevronDown } from "lucide-react";
 
 interface ChatMessageProps {
   message: Message;
@@ -11,6 +14,7 @@ interface ChatMessageProps {
 
 export function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.role === 'user';
+  const hasContext = message.contextSnapshot && Object.keys(message.contextSnapshot).length > 0;
 
   return (
     <div
@@ -26,20 +30,67 @@ export function ChatMessage({ message }: ChatMessageProps) {
         {isUser ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
       </Avatar>
 
-      <Card className={cn(
-        "max-w-[80%]",
-        isUser ? "bg-primary text-primary-foreground" : "bg-secondary"
-      )}>
-        <CardContent className="p-3">
-          {isUser ? (
-            <p className="text-sm">{message.content}</p>
-          ) : (
-            <div className="prose prose-sm dark:prose-invert">
-              <ReactMarkdown>{message.content}</ReactMarkdown>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <div className="flex flex-col gap-2 max-w-[80%]">
+        <Card className={cn(
+          "max-w-full",
+          isUser ? "bg-primary text-primary-foreground" : "bg-secondary"
+        )}>
+          <CardContent className="p-3">
+            {isUser ? (
+              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+            ) : (
+              <div className="prose prose-sm dark:prose-invert">
+                <ReactMarkdown>{message.content}</ReactMarkdown>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {hasContext && !isUser && (
+          <Collapsible>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="gap-2">
+                <ChevronDown className="h-4 w-4" />
+                Show Context
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <Card className="mt-2 bg-muted">
+                <CardContent className="p-3">
+                  <div className="text-xs space-y-2">
+                    {message.contextSnapshot.topic && (
+                      <div>
+                        <span className="font-semibold">Topic:</span> {message.contextSnapshot.topic}
+                      </div>
+                    )}
+                    {message.contextSnapshot.codeContext && (
+                      <>
+                        {message.contextSnapshot.codeContext.language && (
+                          <div>
+                            <span className="font-semibold">Language:</span> {message.contextSnapshot.codeContext.language}
+                          </div>
+                        )}
+                        {message.contextSnapshot.codeContext.patterns && (
+                          <div>
+                            <span className="font-semibold">Patterns:</span>{' '}
+                            {message.contextSnapshot.codeContext.patterns.join(', ')}
+                          </div>
+                        )}
+                        {message.contextSnapshot.codeContext.projectContext && (
+                          <div>
+                            <span className="font-semibold">Project Context:</span>{' '}
+                            {message.contextSnapshot.codeContext.projectContext}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+      </div>
     </div>
   );
 }
