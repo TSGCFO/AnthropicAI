@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer, jsonb, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, jsonb, boolean, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { relations } from "drizzle-orm";
 
@@ -53,7 +53,7 @@ export const codeSnippets = pgTable("code_snippets", {
   filePath: text("file_path").notNull(),
   content: text("content").notNull(),
   language: text("language").notNull(),
-  category: text("category").notNull(), 
+  category: text("category").notNull(),
   description: text("description"),
   metadata: jsonb("metadata").default({}).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -65,13 +65,17 @@ export const codePatterns = pgTable("code_patterns", {
   name: text("name").notNull(),
   description: text("description").notNull(),
   language: text("language").notNull(),
-  code: text("code").notNull(),
+  example: text("code").notNull(),
   tags: text("tags").array(),
   context: jsonb("context").notNull().default({}),
   usageCount: integer("usage_count").notNull().default(0),
   confidence: integer("confidence").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => {
+  return {
+    nameLanguageUnique: unique().on(table.name, table.language),
+  };
 });
 
 export const patternSuggestions = pgTable("pattern_suggestions", {
