@@ -16,6 +16,15 @@ export function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.role === 'user';
   const hasContext = message.contextSnapshot && Object.keys(message.contextSnapshot).length > 0;
 
+  const getContextValue = (path: string[]) => {
+    let current = message.contextSnapshot;
+    for (const key of path) {
+      if (!current || typeof current !== 'object') return undefined;
+      current = current[key];
+    }
+    return current;
+  };
+
   return (
     <div
       className={cn(
@@ -58,28 +67,29 @@ export function ChatMessage({ message }: ChatMessageProps) {
               <Card className="mt-2 bg-muted">
                 <CardContent className="p-3">
                   <div className="text-xs space-y-2">
-                    {message.contextSnapshot.topic && (
+                    {getContextValue(['topic']) && (
                       <div>
-                        <span className="font-semibold">Topic:</span> {message.contextSnapshot.topic}
+                        <span className="font-semibold">Topic:</span> {getContextValue(['topic'])}
                       </div>
                     )}
-                    {message.contextSnapshot.codeContext && (
+                    {getContextValue(['codeContext']) && (
                       <>
-                        {message.contextSnapshot.codeContext.language && (
+                        {getContextValue(['codeContext', 'language']) && (
                           <div>
-                            <span className="font-semibold">Language:</span> {message.contextSnapshot.codeContext.language}
+                            <span className="font-semibold">Language:</span>{' '}
+                            {getContextValue(['codeContext', 'language'])}
                           </div>
                         )}
-                        {message.contextSnapshot.codeContext.patterns && (
+                        {Array.isArray(getContextValue(['codeContext', 'patterns'])) && (
                           <div>
                             <span className="font-semibold">Patterns:</span>{' '}
-                            {message.contextSnapshot.codeContext.patterns.join(', ')}
+                            {(getContextValue(['codeContext', 'patterns']) as string[]).join(', ')}
                           </div>
                         )}
-                        {message.contextSnapshot.codeContext.projectContext && (
+                        {getContextValue(['codeContext', 'projectContext']) && (
                           <div>
                             <span className="font-semibold">Project Context:</span>{' '}
-                            {message.contextSnapshot.codeContext.projectContext}
+                            {getContextValue(['codeContext', 'projectContext'])}
                           </div>
                         )}
                       </>

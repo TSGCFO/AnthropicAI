@@ -63,7 +63,7 @@ export function Chat() {
             topic: "General Discussion",
             codeContext: {
               language: "typescript",
-              projectContext: "LedgerLink Development"
+              projectContext: "AI Coding Assistant Development"
             }
           }
         }),
@@ -133,10 +133,13 @@ export function Chat() {
 
       queryClient.setQueryData<{ messages: Message[], context: Record<string, any> }>(
         [`/api/conversations/${currentConversation.id}/messages`],
-        (old) => ({
-          messages: [...(old?.messages || []), tempAssistantMessage],
-          context: old?.context || {}
-        })
+        (old) => {
+          if (!old) return { messages: [tempAssistantMessage], context: {} };
+          return {
+            messages: [...old.messages, tempAssistantMessage],
+            context: old.context
+          };
+        }
       );
 
       try {
@@ -154,21 +157,23 @@ export function Chat() {
 
               try {
                 const { text } = JSON.parse(data);
-                assistantMessage += text;
+                if (text) {
+                  assistantMessage += text;
 
-                // Update temporary assistant message
-                queryClient.setQueryData<{ messages: Message[], context: Record<string, any> }>(
-                  [`/api/conversations/${currentConversation.id}/messages`],
-                  (old) => {
-                    if (!old) return null;
-                    const messages = [...old.messages];
-                    const lastMessage = messages[messages.length - 1];
-                    if (lastMessage.role === "assistant") {
-                      lastMessage.content = assistantMessage;
+                  // Update temporary assistant message
+                  queryClient.setQueryData<{ messages: Message[], context: Record<string, any> }>(
+                    [`/api/conversations/${currentConversation.id}/messages`],
+                    (old) => {
+                      if (!old) return null;
+                      const messages = [...old.messages];
+                      const lastMessage = messages[messages.length - 1];
+                      if (lastMessage.role === "assistant") {
+                        lastMessage.content = assistantMessage;
+                      }
+                      return { ...old, messages };
                     }
-                    return { ...old, messages };
-                  }
-                );
+                  );
+                }
               } catch (e) {
                 console.error("Failed to parse SSE data:", e);
               }
@@ -246,9 +251,9 @@ export function Chat() {
       <div className="flex-1 flex flex-col">
         <header className="flex items-center justify-between p-4 border-b bg-background">
           <div>
-            <h1 className="text-2xl font-semibold">Project Assistant</h1>
+            <h1 className="text-2xl font-semibold">AI Coding Assistant</h1>
             <p className="text-sm text-muted-foreground">
-              Your specialized AI assistant for this project
+              Your expert companion for software development
             </p>
           </div>
           <Button
@@ -275,24 +280,24 @@ export function Chat() {
         ) : messages.length === 0 ? (
           <Card className="m-4">
             <CardHeader>
-              <CardTitle>Welcome to Your Project Assistant</CardTitle>
+              <CardTitle>Welcome to Your AI Coding Assistant</CardTitle>
               <CardDescription>
-                I'm here to help you with this project. I can:
+                I'm here to help you with your development tasks. I can:
               </CardDescription>
             </CardHeader>
             <CardContent>
               <ul className="space-y-2">
                 <li className="flex items-start gap-2">
                   <Info className="h-5 w-5 mt-0.5 text-muted-foreground" />
-                  <span>Understand and respond to your project-related questions</span>
+                  <span>Help you understand and debug code</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Info className="h-5 w-5 mt-0.5 text-muted-foreground" />
-                  <span>Provide relevant examples and explanations</span>
+                  <span>Suggest best practices and improvements</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Info className="h-5 w-5 mt-0.5 text-muted-foreground" />
-                  <span>Help you understand project-specific concepts</span>
+                  <span>Assist with code reviews and patterns</span>
                 </li>
               </ul>
             </CardContent>
@@ -311,7 +316,7 @@ export function Chat() {
         <ChatInput
           onSend={(content) => sendMessage.mutate(content)}
           disabled={sendMessage.isPending || !currentConversation}
-          isLoading={sendMessage.isPending}
+          loading={sendMessage.isPending}
         />
       </div>
     </div>

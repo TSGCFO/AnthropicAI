@@ -3,6 +3,7 @@ export interface Message {
   conversationId: number;
   role: 'user' | 'assistant';
   content: string;
+  contextSnapshot?: Record<string, any>;
   createdAt: string;
 }
 

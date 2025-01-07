@@ -180,6 +180,7 @@ def process_financial_transaction(request):
         .returning();
       res.json(conversation[0]);
     } catch (error) {
+      console.error('Create conversation error:', error);
       res.status(500).json({ error: "Failed to create conversation" });
     }
   });
@@ -198,6 +199,7 @@ def process_financial_transaction(request):
       });
       res.json(allConversations);
     } catch (error) {
+      console.error('Get conversations error:', error);
       res.status(500).json({ error: "Failed to fetch conversations" });
     }
   });
@@ -219,6 +221,7 @@ def process_financial_transaction(request):
         context: conversationContext.context
       });
     } catch (error) {
+      console.error('Get messages error:', error);
       res.status(500).json({ error: "Failed to fetch messages" });
     }
   });
@@ -245,6 +248,7 @@ def process_financial_transaction(request):
 
       res.json(updated[0]);
     } catch (error) {
+      console.error('Update conversation error:', error);
       res.status(500).json({ error: "Failed to update conversation" });
     }
   });
@@ -260,8 +264,16 @@ def process_financial_transaction(request):
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('X-Accel-Buffering', 'no');
 
+    // Keep track of whether headers have been sent
+    let headersSent = false;
+    const keepAlive = setInterval(() => {
+      if (!headersSent) {
+        res.write(': keep-alive\n\n');
+      }
+    }, 15000);
+
     try {
-      // Save user message with proper schema values
+      // Save user message
       await db.insert(messages).values({
         conversationId,
         role: "user",
@@ -271,21 +283,17 @@ def process_financial_transaction(request):
       });
 
       // Update conversation timestamp
-      await db
-        .update(conversations)
+      await db.update(conversations)
         .set({ updatedAt: new Date() })
         .where(eq(conversations.id, conversationId));
-
-      const keepAlive = setInterval(() => {
-        res.write(': keep-alive\n\n');
-      }, 15000);
 
       try {
         const stream = await AssistantService.processMessage(content, conversationId);
 
+        headersSent = true;
         for await (const chunk of stream) {
           if (chunk.text) {
-            res.write(`data: ${JSON.stringify({ text: chunk.text })}\n\n`);
+            res.write(`data: ${JSON.stringify(chunk)}\n\n`);
           }
         }
 
@@ -293,17 +301,22 @@ def process_financial_transaction(request):
       } catch (error) {
         console.error('Streaming error:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        res.write(`data: ${JSON.stringify({ error: errorMessage })}\n\n`);
-      } finally {
-        clearInterval(keepAlive);
-        res.end();
+        if (!headersSent) {
+          res.status(500).json({ error: errorMessage });
+        } else {
+          res.write(`data: ${JSON.stringify({ error: errorMessage })}\n\n`);
+        }
       }
     } catch (error) {
       console.error('Request error:', error);
-      if (!res.headersSent) {
+      if (!headersSent) {
         res.status(500).json({ error: "Failed to process message" });
       } else {
         res.write(`data: ${JSON.stringify({ error: "Failed to process message" })}\n\n`);
+      }
+    } finally {
+      clearInterval(keepAlive);
+      if (!res.closed) {
         res.end();
       }
     }

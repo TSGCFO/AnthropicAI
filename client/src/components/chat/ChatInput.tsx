@@ -1,19 +1,20 @@
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Send } from "lucide-react";
+import { Send, Loader2 } from "lucide-react";
 
 interface ChatInputProps {
   onSend: (message: string) => void;
   disabled?: boolean;
+  loading?: boolean;
 }
 
-export function ChatInput({ onSend, disabled }: ChatInputProps) {
+export function ChatInput({ onSend, disabled, loading }: ChatInputProps) {
   const [input, setInput] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (input.trim() && !disabled) {
+    if (input.trim() && !disabled && !loading) {
       onSend(input.trim());
       setInput("");
     }
@@ -34,10 +35,18 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
         onKeyDown={handleKeyDown}
         placeholder="Type a message..."
         className="min-h-[60px] max-h-[200px]"
-        disabled={disabled}
+        disabled={disabled || loading}
       />
-      <Button type="submit" size="icon" disabled={disabled || !input.trim()}>
-        <Send className="h-4 w-4" />
+      <Button 
+        type="submit" 
+        size="icon" 
+        disabled={disabled || loading || !input.trim()}
+      >
+        {loading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Send className="h-4 w-4" />
+        )}
       </Button>
     </form>
   );
