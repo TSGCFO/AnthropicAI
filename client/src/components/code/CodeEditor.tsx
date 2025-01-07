@@ -7,6 +7,15 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CodeEditorLib from "@uiw/react-textarea-code-editor";
 
+interface CodePattern {
+  id?: number; // Added id for pattern usage tracking
+  name: string;
+  description: string;
+  code: string;
+  confidence: number;
+  context: Record<string, any>;
+}
+
 interface CodeEditorProps {
   initialCode?: string;
   language?: string;
@@ -32,6 +41,8 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
   const [fileName, setFileName] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [reconnectAttempt, setReconnectAttempt] = useState(0);
+  const [patterns, setPatterns] = useState<CodePattern[]>([]);
+  const [isLoadingPatterns, setIsLoadingPatterns] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout>();
@@ -81,12 +92,11 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
       console.log('WebSocket connection closed');
       setIsConnected(false);
 
-      // Implement exponential backoff for reconnection
       const maxReconnectAttempts = 5;
-      const baseDelay = 1000; // 1 second
+      const baseDelay = 1000;
 
       if (reconnectAttempt < maxReconnectAttempts) {
-        const delay = Math.min(baseDelay * Math.pow(2, reconnectAttempt), 30000); // Max 30 seconds
+        const delay = Math.min(baseDelay * Math.pow(2, reconnectAttempt), 30000);
         setTimeout(() => {
           setReconnectAttempt(prev => prev + 1);
           connectWebSocket();
@@ -171,7 +181,6 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Get file extension to set language
     const extension = file.name.split('.').pop()?.toLowerCase();
     const supportedExtensions: { [key: string]: string } = {
       'py': 'python',
@@ -262,7 +271,6 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
     try {
       setIsLoading(true);
 
-      // Try WebSocket first for real-time suggestions
       if (wsRef.current?.readyState === WebSocket.OPEN) {
         wsRef.current.send(JSON.stringify({
           type: 'suggestion',
@@ -273,7 +281,6 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
           }
         }));
       } else {
-        // Fallback to REST API if WebSocket is not available
         const response = await fetch('/api/code/suggest', {
           method: 'POST',
           headers: {
@@ -313,7 +320,6 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
     setCode(newCode);
     onCodeChange?.(newCode);
 
-    // Debounce real-time suggestions
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
@@ -336,6 +342,78 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
       });
     }
   };
+
+  const requestPatterns = async () => {
+    try {
+      setIsLoadingPatterns(true);
+      const response = await fetch('/api/patterns/suggest', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          code,
+          language,
+          limit: 5,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get pattern suggestions');
+      }
+
+      const suggestions = await response.json();
+      setPatterns(suggestions);
+    } catch (error) {
+      if (error instanceof Error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setIsLoadingPatterns(false);
+    }
+  };
+
+  const applyPattern = async (pattern: CodePattern) => {
+    try {
+      await fetch('/api/patterns/usage', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          patternId: pattern.id, // Use pattern ID if available
+          context: code,
+          accepted: true,
+        }),
+      });
+
+      setCode(pattern.code);
+      onCodeChange?.(pattern.code);
+
+      toast({
+        title: "Pattern Applied",
+        description: `Successfully applied pattern: ${pattern.name}`,
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (code.trim().length > 10) {
+      requestPatterns();
+    }
+  }, [code]);
 
   return (
     <Card className="p-4 w-full">
@@ -417,20 +495,22 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
             </div>
           </div>
 
-          {(suggestions || analysis) && (
+          {(suggestions || analysis || patterns.length > 0) && (
             <div className="space-y-4">
               <Tabs defaultValue="suggestions">
                 <TabsList>
                   <TabsTrigger value="suggestions">Suggestions</TabsTrigger>
                   <TabsTrigger value="analysis">Analysis</TabsTrigger>
+                  <TabsTrigger value="patterns">
+                    Patterns
+                    {patterns.length > 0 && (
+                      <span className="ml-2 bg-primary/10 text-primary rounded-full px-2 py-0.5 text-xs">
+                        {patterns.length}
+                      </span>
+                    )}
+                  </TabsTrigger>
                   {analysis?.patterns && (
-                    <TabsTrigger value="patterns">Patterns</TabsTrigger>
-                  )}
-                  {analysis?.performance && (
-                    <TabsTrigger value="performance">Performance</TabsTrigger>
-                  )}
-                  {analysis?.maintainability && (
-                    <TabsTrigger value="maintainability">Maintainability</TabsTrigger>
+                    <TabsTrigger value="detected">Detected</TabsTrigger>
                   )}
                   {explanation && (
                     <TabsTrigger value="explanation">Explanation</TabsTrigger>
@@ -486,7 +566,6 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
                             </ul>
                           </div>
                         )}
-
                         {analysis.improvements.length > 0 && (
                           <div>
                             <h4 className="font-medium mb-2">Improvements</h4>
@@ -497,7 +576,6 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
                             </ul>
                           </div>
                         )}
-
                         {analysis.security.length > 0 && (
                           <div>
                             <h4 className="font-medium mb-2">Security Considerations</h4>
@@ -508,7 +586,6 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
                             </ul>
                           </div>
                         )}
-
                         {analysis.maintainability && analysis.maintainability.length > 0 && (
                           <div>
                             <h4 className="font-medium mb-2">Maintainability</h4>
@@ -544,50 +621,60 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
                   )}
                 </TabsContent>
 
-                {analysis?.patterns && (
-                  <TabsContent value="patterns">
-                    <ScrollArea className="h-[400px] w-full rounded-md border p-4">
-                      <div>
-                        <h4 className="font-medium mb-2">Detected Patterns</h4>
-                        <ul className="list-disc pl-5 space-y-1">
-                          {analysis.patterns.map((pattern, i) => (
-                            <li key={i} className="text-sm">{pattern}</li>
-                          ))}
-                        </ul>
+                <TabsContent value="patterns">
+                  <ScrollArea className="h-[400px] w-full rounded-md border p-4">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium">Recommended Patterns</h4>
+                        {isLoadingPatterns && (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        )}
                       </div>
-                    </ScrollArea>
-                  </TabsContent>
-                )}
-
-                {analysis?.performance && (
-                  <TabsContent value="performance">
-                    <ScrollArea className="h-[400px] w-full rounded-md border p-4">
-                      <div>
-                        <h4 className="font-medium mb-2">Performance Analysis</h4>
-                        <ul className="list-disc pl-5 space-y-1">
-                          {analysis.performance.map((item, i) => (
-                            <li key={i} className="text-sm">{item}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </ScrollArea>
-                  </TabsContent>
-                )}
-
-                {analysis?.maintainability && (
-                  <TabsContent value="maintainability">
-                    <ScrollArea className="h-[400px] w-full rounded-md border p-4">
-                      <div>
-                        <h4 className="font-medium mb-2">Maintainability</h4>
-                        <ul className="list-disc pl-5 space-y-1">
-                          {analysis.maintainability.map((item, i) => (
-                            <li key={i} className="text-sm">{item}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </ScrollArea>
-                  </TabsContent>
-                )}
+                      {patterns.map((pattern, index) => (
+                        <div
+                          key={index}
+                          className="rounded-lg border p-4 space-y-2"
+                        >
+                          <div className="flex items-center justify-between">
+                            <h5 className="font-medium">{pattern.name}</h5>
+                            <span className="text-sm text-muted-foreground">
+                              {Math.round(pattern.confidence * 100)}% match
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {pattern.description}
+                          </p>
+                          <div className="relative">
+                            <CodeEditorLib
+                              value={pattern.code}
+                              language={language}
+                              readOnly
+                              padding={10}
+                              style={{
+                                fontSize: 12,
+                                backgroundColor: "var(--background)",
+                                fontFamily:
+                                  "ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace",
+                              }}
+                            />
+                            <Button
+                              size="sm"
+                              className="absolute top-2 right-2"
+                              onClick={() => applyPattern(pattern)}
+                            >
+                              Apply Pattern
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                      {patterns.length === 0 && !isLoadingPatterns && (
+                        <p className="text-sm text-muted-foreground">
+                          No patterns found for the current code context.
+                        </p>
+                      )}
+                    </div>
+                  </ScrollArea>
+                </TabsContent>
 
                 {explanation && (
                   <TabsContent value="explanation">

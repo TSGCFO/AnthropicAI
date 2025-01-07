@@ -2,8 +2,9 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupWebSocketServer } from './lib/wsHandler';
 import { generateCodeSuggestion, analyzeCode, explainCode } from './lib/codeai';
+import { detectPatterns, suggestPatterns, storeCodePattern, recordPatternUsage } from './lib/patterns';
 import { db } from "@db";
-import { conversations, messages } from "@db/schema";
+import { conversations, messages, codePatterns } from "@db/schema";
 import { generateChatResponse } from "./lib/anthropic";
 import { eq, desc, asc } from "drizzle-orm";
 
@@ -12,6 +13,60 @@ export function registerRoutes(app: Express): Server {
 
   // Setup WebSocket server for real-time code assistance
   const wss = setupWebSocketServer(httpServer);
+
+  // Code pattern endpoints
+  app.post("/api/patterns/detect", async (req, res) => {
+    try {
+      const { code, language } = req.body;
+      const patterns = await detectPatterns(code, language);
+      res.json(patterns);
+    } catch (error) {
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.post("/api/patterns/suggest", async (req, res) => {
+    try {
+      const { code, language, limit } = req.body;
+      const suggestions = await suggestPatterns(code, language, limit);
+      res.json(suggestions);
+    } catch (error) {
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.post("/api/patterns/store", async (req, res) => {
+    try {
+      const { name, description, code, language, tags, context } = req.body;
+      const pattern = await storeCodePattern(name, description, code, language, tags, context);
+      res.json(pattern);
+    } catch (error) {
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.post("/api/patterns/usage", async (req, res) => {
+    try {
+      const { patternId, context, accepted } = req.body;
+      await recordPatternUsage(patternId, context, accepted);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.get("/api/patterns", async (req, res) => {
+    try {
+      const { language } = req.query;
+      const patterns = await db.query.codePatterns.findMany({
+        where: language ? eq(codePatterns.language, language as string) : undefined,
+        orderBy: [desc(codePatterns.usageCount)],
+      });
+      res.json(patterns);
+    } catch (error) {
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
 
   // Test endpoint to demonstrate enhanced code generation
   app.post("/api/code/test-generation", async (req, res) => {
