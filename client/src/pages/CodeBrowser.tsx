@@ -22,12 +22,14 @@ export function CodeBrowser() {
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedDirs, setExpandedDirs] = useState<Set<string>>(new Set());
 
+  // Query for file tree
   const { data: fileTree, isLoading } = useQuery<FileNode>({
     queryKey: ["/api/codebase/tree"],
   });
 
-  const { data: fileContent, isLoading: isLoadingContent } = useQuery<{ content: string }>({
-    queryKey: [`/api/codebase/file`, selectedFile?.path],
+  // Query for file content
+  const { data: fileContent, isLoading: isLoadingContent } = useQuery({
+    queryKey: [`/api/codebase/file`, { path: selectedFile?.path }],
     enabled: !!selectedFile?.path,
   });
 
@@ -134,7 +136,7 @@ export function CodeBrowser() {
                 </div>
               ) : fileContent ? (
                 <pre className="p-4 text-sm">
-                  <code>{fileContent.content}</code>
+                  <code>{fileContent?.content}</code>
                 </pre>
               ) : (
                 <div className="p-4 text-sm text-muted-foreground">
