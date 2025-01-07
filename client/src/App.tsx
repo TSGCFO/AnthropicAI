@@ -1,9 +1,10 @@
 import { Switch, Route } from "wouter";
 import { Chat } from "@/pages/Chat";
 import { CodeAssistant } from "@/pages/CodeAssistant";
+import { CodeBrowser } from "@/pages/CodeBrowser";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Code, MessageSquare } from "lucide-react";
+import { Code, MessageSquare, FileCode } from "lucide-react";
 import { Link } from "wouter";
 
 function App() {
@@ -12,6 +13,7 @@ function App() {
       <Route path="/" component={Home} />
       <Route path="/chat" component={Chat} />
       <Route path="/code" component={CodeAssistant} />
+      <Route path="/browse" component={CodeBrowser} />
     </Switch>
   );
 }
@@ -27,7 +29,7 @@ function Home() {
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-3">
           <Link href="/code">
             <Card className="p-6 hover:bg-accent cursor-pointer transition-colors">
               <div className="space-y-4">
@@ -47,6 +49,18 @@ function Home() {
                 <h2 className="text-2xl font-semibold">Chat</h2>
                 <p className="text-muted-foreground">
                   Discuss your code and get help from AI
+                </p>
+              </div>
+            </Card>
+          </Link>
+
+          <Link href="/browse">
+            <Card className="p-6 hover:bg-accent cursor-pointer transition-colors">
+              <div className="space-y-4">
+                <FileCode className="w-12 h-12" />
+                <h2 className="text-2xl font-semibold">Code Browser</h2>
+                <p className="text-muted-foreground">
+                  Browse and explore the codebase directly
                 </p>
               </div>
             </Card>

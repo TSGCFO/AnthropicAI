@@ -10,6 +10,8 @@ import { eq, desc, asc } from "drizzle-orm";
 import { ContextManager } from "./lib/contextManager";
 import { indexCodebase } from "./lib/codebaseIndexer";
 import { AssistantService } from './lib/assistantService';
+import { readFile, readdir } from 'fs/promises';
+import { join, extname } from 'path';
 
 export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
@@ -20,6 +22,108 @@ export function registerRoutes(app: Express): Server {
   // Initialize codebase indexing
   indexCodebase().catch(error => {
     console.error('Failed to index codebase:', error);
+  });
+
+  // Code browser endpoints
+  app.get("/api/codebase/tree", async (req, res) => {
+    try {
+      const root = process.cwd();
+
+      async function buildTree(dir: string): Promise<any> {
+        const entries = await readdir(dir, { withFileTypes: true });
+        const children = await Promise.all(
+          entries
+            .filter(entry => !entry.name.startsWith('.') && entry.name !== 'node_modules')
+            .map(async entry => {
+              const path = join(dir, entry.name);
+              const relativePath = path.slice(root.length + 1);
+
+              if (entry.isDirectory()) {
+                const children = await buildTree(path);
+                return {
+                  name: entry.name,
+                  path: relativePath,
+                  type: 'directory',
+                  children
+                };
+              }
+
+              // Get file language based on extension
+              const ext = extname(entry.name).toLowerCase();
+              let language = 'plaintext';
+
+              switch (ext) {
+                case '.ts':
+                case '.tsx':
+                  language = 'typescript';
+                  break;
+                case '.js':
+                case '.jsx':
+                  language = 'javascript';
+                  break;
+                case '.py':
+                  language = 'python';
+                  break;
+                case '.json':
+                  language = 'json';
+                  break;
+                case '.md':
+                  language = 'markdown';
+                  break;
+                case '.css':
+                  language = 'css';
+                  break;
+                case '.html':
+                  language = 'html';
+                  break;
+              }
+
+              return {
+                name: entry.name,
+                path: relativePath,
+                type: 'file',
+                language
+              };
+            })
+        );
+
+        return children;
+      }
+
+      const tree = {
+        name: '/',
+        path: '',
+        type: 'directory',
+        children: await buildTree(root)
+      };
+
+      res.json(tree);
+    } catch (error) {
+      console.error('Error getting file tree:', error);
+      res.status(500).json({ error: 'Failed to get file tree' });
+    }
+  });
+
+  app.get("/api/codebase/file", async (req, res) => {
+    try {
+      const { path } = req.query;
+
+      if (!path || typeof path !== 'string') {
+        return res.status(400).json({ error: 'Path parameter is required' });
+      }
+
+      // Prevent directory traversal
+      const normalizedPath = join(process.cwd(), path).replace(/\.\./g, '');
+      if (!normalizedPath.startsWith(process.cwd())) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+
+      const content = await readFile(normalizedPath, 'utf-8');
+      res.json({ content });
+    } catch (error) {
+      console.error('Error reading file:', error);
+      res.status(500).json({ error: 'Failed to read file' });
+    }
   });
 
   // Code pattern endpoints
