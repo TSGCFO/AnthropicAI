@@ -2,7 +2,7 @@ import { Anthropic } from '@anthropic-ai/sdk';
 import { db } from "@db";
 import { messages } from "@db/schema";
 import { ContextManager } from "./contextManager";
-import { systemPrompts, reasoningSchema, outputSchemas } from './prompts/systemPrompts';
+import { systemPrompts, reasoningSchema, taskBreakdownSchema, outputSchemas } from './prompts/systemPrompts';
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 
@@ -23,8 +23,11 @@ export class AssistantService {
       // Get conversation context
       const conversationContext = await ContextManager.getConversationContext(conversationId);
 
+      // Break down the task and analyze requirements
+      const taskBreakdown = await this.analyzeTask(content, conversationContext);
+
       // Apply problem decomposition using PoTh structure
-      const decomposedPrompt = await this.decomposeRequest(content, conversationContext);
+      const decomposedPrompt = await this.decomposeRequest(content, conversationContext, taskBreakdown);
 
       // Create the stream with enhanced prompting
       const stream = await anthropic.messages.create({
@@ -37,7 +40,7 @@ export class AssistantService {
             content: decomposedPrompt 
           }
         ],
-        system: this.buildSystemMessage(conversationContext),
+        system: this.buildSystemMessage(conversationContext, taskBreakdown),
         stream: true
       });
 
@@ -65,7 +68,8 @@ export class AssistantService {
           // Validate and structure the response
           const validatedResponse = await AssistantService.validateResponse(
             fullResponse,
-            conversationContext.context
+            conversationContext.context,
+            taskBreakdown
           );
 
           // Update message with validated response
@@ -87,33 +91,102 @@ export class AssistantService {
     }
   }
 
+  private static async analyzeTask(
+    content: string,
+    context: { context: Record<string, any>; relevantHistory: any[] }
+  ) {
+    // Analyze the task requirements and context
+    const taskContext = {
+      relevantFiles: [] as any[],
+      components: [] as string[],
+      changes: [] as any[]
+    };
+
+    // Identify relevant files from context
+    if (context.context.codeContext?.relevantFiles) {
+      taskContext.relevantFiles = context.context.codeContext.relevantFiles.map(file => ({
+        path: file.path,
+        description: this.categorizeFile(file.path),
+        modifications: this.suggestModifications(file.path, content)
+      }));
+    }
+
+    // Identify key components that might need changes
+    const components = new Set<string>();
+    if (content.toLowerCase().includes('model') || content.toLowerCase().includes('database')) {
+      components.add('Data Models');
+    }
+    if (content.toLowerCase().includes('view') || content.toLowerCase().includes('template')) {
+      components.add('Views/Templates');
+    }
+    if (content.toLowerCase().includes('api') || content.toLowerCase().includes('endpoint')) {
+      components.add('API Routes');
+    }
+    taskContext.components = Array.from(components);
+
+    return taskContext;
+  }
+
   private static async decomposeRequest(
     content: string, 
-    context: { context: Record<string, any>; relevantHistory: any[] }
+    context: { context: Record<string, any>; relevantHistory: any[] },
+    taskBreakdown: any
   ): Promise<string> {
     // Initial thought: Understand the request
     const initialAnalysis = `Let's break this down step by step:
 
-1. Request Analysis:
-- User Query: "${content}"
+1. Task Analysis:
+- User Request: "${content}"
 - Context: ${context.context.currentState || 'Initial state'}
 - Technical Domain: ${context.context.codeContext?.language || 'General programming'}
 
-2. Prior Context:
+2. Project Context:
 ${this.extractRelevantHistory(context.relevantHistory)}
 
-3. Problem Decomposition:
-- Core Requirements
-- Technical Constraints
-- Implementation Considerations
+3. Relevant Components:
+${taskBreakdown.components.map(comp => `- ${comp}`).join('\n')}
 
-Please provide a structured response that shows:
-1. Your understanding of the problem
+4. Files to Consider:
+${taskBreakdown.relevantFiles.map(file => `- ${file.path}: ${file.description}`).join('\n')}
+
+Please provide a comprehensive solution that includes:
+1. Your understanding of the requirements
 2. Approach and methodology
-3. Implementation details with clear steps
-4. Validation criteria and testing suggestions`;
+3. Detailed implementation steps
+4. Validation criteria and testing suggestions
+5. Future considerations and potential impacts`;
 
     return initialAnalysis;
+  }
+
+  private static categorizeFile(filePath: string): string {
+    if (filePath.includes('models')) return 'Data model definition';
+    if (filePath.includes('views')) return 'View logic and request handling';
+    if (filePath.includes('routes')) return 'API route definition';
+    if (filePath.includes('templates')) return 'UI template';
+    if (filePath.includes('services')) return 'Business logic service';
+    if (filePath.includes('utils')) return 'Utility functions';
+    return 'General project file';
+  }
+
+  private static suggestModifications(filePath: string, request: string): string[] {
+    const suggestions: string[] = [];
+    const requestLower = request.toLowerCase();
+
+    if (filePath.includes('models') && (requestLower.includes('model') || requestLower.includes('database'))) {
+      suggestions.push('May need schema updates');
+      suggestions.push('Consider data relationships');
+    }
+    if (filePath.includes('views') && (requestLower.includes('view') || requestLower.includes('page'))) {
+      suggestions.push('Update view logic');
+      suggestions.push('Add error handling');
+    }
+    if (filePath.includes('routes') && (requestLower.includes('api') || requestLower.includes('endpoint'))) {
+      suggestions.push('Add new route handlers');
+      suggestions.push('Implement request validation');
+    }
+
+    return suggestions;
   }
 
   private static extractRelevantHistory(history: any[]): string {
@@ -135,7 +208,8 @@ Please provide a structured response that shows:
 
   private static async validateResponse(
     response: string,
-    context: Record<string, any>
+    context: Record<string, any>,
+    taskBreakdown: any
   ): Promise<string> {
     try {
       // Parse response into structured sections
@@ -157,14 +231,18 @@ Please provide a structured response that shows:
       // Validate against schema
       const validated = reasoningSchema.parse(structured);
 
+      // Add task-specific context
+      const taskContext = taskBreakdownSchema.parse(taskBreakdown);
+
       // Format response with clear sections
-      return `Understanding:\n${validated.understanding}\n\n` +
+      return `Task Analysis:\n${validated.understanding}\n\n` +
              `Approach:\n${validated.approach}\n\n` +
-             `Implementation:\n${validated.implementation.steps.map((s, i) => `${i + 1}. ${s}`).join('\n')}\n\n` +
-             (validated.implementation.code ? `Code:\n\`\`\`\n${validated.implementation.code}\n\`\`\`\n\n` : '') +
-             `Validation:\n${validated.implementation.validation.map(v => `- ${v}`).join('\n')}\n\n` +
+             `Implementation Plan:\n${validated.implementation.steps.map((s, i) => `${i + 1}. ${s}`).join('\n')}\n\n` +
+             (validated.implementation.code ? `Code Changes:\n\`\`\`\n${validated.implementation.code}\n\`\`\`\n\n` : '') +
+             `Validation Steps:\n${validated.implementation.validation.map(v => `- ${v}`).join('\n')}\n\n` +
+             `Files Affected:\n${taskContext.relevantFiles.map(f => `- ${f.path}: ${f.description}`).join('\n')}\n\n` +
              `Key Considerations:\n${validated.considerations.map(c => `- ${c}`).join('\n')}\n\n` +
-             `Conclusion:\n${validated.conclusion}`;
+             `Future Impact:\n${validated.conclusion}`;
     } catch (error) {
       console.error('Response validation failed:', error);
       // Fall back to original response if validation fails
@@ -173,7 +251,8 @@ Please provide a structured response that shows:
   }
 
   private static buildSystemMessage(
-    context: { context: Record<string, any>; relevantHistory: any[] }
+    context: { context: Record<string, any>; relevantHistory: any[] },
+    taskBreakdown: any
   ): string {
     // Get base system prompt
     let systemMessage = systemPrompts.codeAssistant;
@@ -192,6 +271,12 @@ Please provide a structured response that shows:
           systemMessage += `\nFile: ${file.path}\n\`\`\`\n${file.snippet}\n\`\`\``;
         }
       }
+    }
+
+    // Add task-specific breakdown
+    if (taskBreakdown.components.length > 0) {
+      systemMessage += '\n\nAffected Components:\n' +
+        taskBreakdown.components.map((comp: string) => `- ${comp}`).join('\n');
     }
 
     return systemMessage;

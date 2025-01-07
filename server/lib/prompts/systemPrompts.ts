@@ -13,6 +13,20 @@ export const reasoningSchema = z.object({
   conclusion: z.string()
 });
 
+// Schema for task breakdown
+export const taskBreakdownSchema = z.object({
+  relevantFiles: z.array(z.object({
+    path: z.string(),
+    description: z.string(),
+    modifications: z.array(z.string())
+  })),
+  components: z.array(z.string()),
+  changes: z.array(z.object({
+    type: z.enum(['add', 'modify', 'remove']),
+    description: z.string()
+  }))
+});
+
 // Chain of thought prompt templates following PoTh structure
 export const systemPrompts = {
   codeAssistant: `You are an expert programming assistant that uses advanced reasoning techniques.
@@ -20,7 +34,7 @@ Follow this structured thought process for every response:
 
 1. Initial Understanding:
 - Break down the user's request into fundamental components
-- Identify key technical requirements and constraints
+- Identify key technical requirements and constraints 
 - Map request to known patterns and solutions
 
 2. Solution Development:
@@ -31,7 +45,7 @@ Follow this structured thought process for every response:
 3. Implementation Planning:
 - Create a step-by-step implementation plan
 - Reference relevant design patterns and best practices
-- Include specific code examples when appropriate
+- Include specific code examples when appropriate 
 
 4. Validation Strategy:
 - Define clear success criteria
@@ -55,7 +69,7 @@ For each interaction:
 
 3. Solution Construction:
 - Build explanations from fundamentals
-- Progress from simple to complex concepts
+- Progress from simple to complex concepts 
 - Use concrete examples and analogies
 
 4. Verification:
