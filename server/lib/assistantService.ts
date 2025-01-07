@@ -18,6 +18,16 @@ const anthropic = new Anthropic({
 });
 
 export class AssistantService {
+  private static activeContext: {
+    files: { path: string; content: string; }[];
+    currentFile?: string;
+    language?: string;
+    projectScope?: string[];
+  } = {
+    files: [],
+    projectScope: []
+  };
+
   static async processMessage(content: string, conversationId: number) {
     try {
       // Get conversation context
@@ -25,6 +35,9 @@ export class AssistantService {
 
       // Break down the task and analyze requirements
       const taskBreakdown = await this.analyzeTask(content, conversationContext);
+
+      // Update active context based on task analysis
+      await this.updateActiveContext(taskBreakdown);
 
       // Apply problem decomposition using PoTh structure
       const decomposedPrompt = await this.decomposeRequest(content, conversationContext, taskBreakdown);
@@ -49,7 +62,10 @@ export class AssistantService {
         conversationId,
         role: 'assistant',
         content: '',
-        contextSnapshot: conversationContext.context,
+        contextSnapshot: {
+          ...conversationContext.context,
+          activeContext: this.activeContext
+        },
         createdAt: new Date()
       }).returning();
 
@@ -80,7 +96,6 @@ export class AssistantService {
 
         } catch (error) {
           console.error('Error in stream processing:', error);
-          // Add detailed error handling
           const errorMessage = `Error processing response: ${error.message}`;
           await db
             .update(messages)
@@ -95,6 +110,98 @@ export class AssistantService {
       console.error('Error processing message:', error);
       throw error;
     }
+  }
+
+  private static async updateActiveContext(taskBreakdown: any) {
+    // Update active context with relevant files
+    this.activeContext.files = await Promise.all(
+      taskBreakdown.relevantFiles.map(async (file: any) => {
+        try {
+          const content = await this.readFileContent(file.path);
+          return {
+            path: file.path,
+            content
+          };
+        } catch (error) {
+          console.error(`Error reading file ${file.path}:`, error);
+          return {
+            path: file.path,
+            content: ''
+          };
+        }
+      })
+    );
+
+    // Update current file if mentioned in the context
+    const mainFile = taskBreakdown.relevantFiles[0];
+    if (mainFile) {
+      this.activeContext.currentFile = mainFile.path;
+    }
+
+    // Update language detection
+    this.activeContext.language = this.detectLanguage(this.activeContext.currentFile);
+
+    // Update project scope
+    this.activeContext.projectScope = this.getProjectScope(taskBreakdown.components);
+  }
+
+  private static async readFileContent(filePath: string): Promise<string> {
+    // Implementation needed for file reading
+    // This should be replaced with actual file system access
+    return '';
+  }
+
+  private static detectLanguage(filePath?: string): string {
+    if (!filePath) return 'typescript';
+
+    const ext = filePath.split('.').pop()?.toLowerCase();
+    const languageMap: Record<string, string> = {
+      'ts': 'typescript',
+      'tsx': 'typescript',
+      'js': 'javascript',
+      'jsx': 'javascript',
+      'py': 'python',
+      'rb': 'ruby',
+      'go': 'go',
+      'rs': 'rust',
+      'java': 'java',
+      'php': 'php',
+      'cs': 'csharp'
+    };
+
+    return languageMap[ext || ''] || 'typescript';
+  }
+
+  private static getProjectScope(components: string[]): string[] {
+    const scope = new Set<string>();
+
+    // Add basic scope
+    scope.add('Code Development');
+    scope.add('Technical Discussion');
+
+    // Add component-specific scope
+    components.forEach(component => {
+      if (component.includes('Data')) scope.add('Database Management');
+      if (component.includes('API')) scope.add('API Development');
+      if (component.includes('UI')) scope.add('Frontend Development');
+      if (component.includes('Auth')) scope.add('Authentication & Security');
+      if (component.includes('Test')) scope.add('Testing & Quality');
+    });
+
+    return Array.from(scope);
+  }
+
+  private static formatResponse(response: string, context: any): string {
+    // Add context awareness to the response
+    const contextInfo = `Current Context:
+- File: ${this.activeContext.currentFile || 'No specific file'}
+- Language: ${this.activeContext.language}
+- Scope: ${this.activeContext.projectScope.join(', ')}
+- Related Files: ${this.activeContext.files.map(f => f.path).join(', ')}
+
+`;
+
+    return contextInfo + response;
   }
 
   private static async analyzeTask(

@@ -13,19 +13,28 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Send, Loader2, Info } from "lucide-react";
+import { 
+  Send, 
+  Loader2, 
+  Code, 
+  MessageSquare, 
+  FileCode,
+  ChevronDown,
+  ChevronUp
+} from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 export function CodeAssistant() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [code, setCode] = useState(`# Welcome to the AI Code Assistant!
-# You can:
-# 1. Write or paste code for analysis and improvements
-# 2. Ask questions about programming concepts
-# 3. Get help with debugging and problem-solving
-
-`);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [code, setCode] = useState("");
+  const [query, setQuery] = useState("");
   const [currentConversationId, setCurrentConversationId] = useState<number>();
 
   // Fetch current conversation
@@ -46,6 +55,7 @@ export function CodeAssistant() {
   });
 
   const messages = messagesData?.messages ?? [];
+  const context = messagesData?.context ?? {};
 
   // Create conversation if none exists
   const createConversation = useMutation({
@@ -57,8 +67,8 @@ export function CodeAssistant() {
           title: "Code Assistant Session",
           initialContext: {
             codeContext: {
-              language: "python",
-              projectContext: "AI Code Assistant"
+              language: "typescript",
+              projectContext: "AI Code Assistant Development"
             }
           }
         }),
@@ -79,18 +89,19 @@ export function CodeAssistant() {
     }
   });
 
-  // Send code/query mutation
+  // Send message mutation
   const sendMessage = useMutation({
     mutationFn: async () => {
       if (!currentConversation) throw new Error("No conversation selected");
-      if (!code.trim()) return;
+      const content = isEditorOpen ? code : query;
+      if (!content.trim()) return;
 
       // Add user message
       const tempUserMessage: Message = {
         id: Date.now(),
         conversationId: currentConversation.id,
         role: "user",
-        content: code,
+        content,
         createdAt: new Date().toISOString(),
       };
 
@@ -107,7 +118,7 @@ export function CodeAssistant() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ content: code }),
+          body: JSON.stringify({ content }),
         }
       );
 
@@ -180,8 +191,12 @@ export function CodeAssistant() {
         reader.releaseLock();
       }
 
-      // Clear the input after sending
-      setCode("");
+      // Clear inputs after sending
+      if (isEditorOpen) {
+        setCode("");
+      } else {
+        setQuery("");
+      }
 
       // Invalidate queries to get fresh data
       queryClient.invalidateQueries({
@@ -220,90 +235,153 @@ export function CodeAssistant() {
     );
   }
 
+  const activeContext = context.activeContext || {};
+
   return (
-    <div className="container mx-auto py-8 px-4 min-h-screen flex flex-col">
+    <div className="container mx-auto py-8 px-4 min-h-screen flex flex-col max-w-4xl">
       <div className="flex-1 flex flex-col space-y-4">
-        <div>
+        <div className="space-y-2">
           <h1 className="text-3xl font-bold">AI Code Assistant</h1>
           <p className="text-muted-foreground">
             Your intelligent companion for software development
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1">
-          {/* Input Section */}
-          <div className="flex flex-col gap-4">
-            <Card className="flex-1">
-              <CardHeader>
-                <CardTitle>Code & Query Input</CardTitle>
-                <CardDescription>
-                  Write code or ask questions in natural language
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <CodeEditor 
-                  language="python"
-                  value={code}
-                  onChange={setCode}
-                  className="min-h-[400px]"
-                />
-                <div className="mt-4 flex justify-end">
-                  <Button 
-                    onClick={() => sendMessage.mutate()}
-                    disabled={sendMessage.isPending || !code.trim()}
-                  >
-                    {sendMessage.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <>
-                        <Send className="h-4 w-4 mr-2" />
-                        Send
-                      </>
-                    )}
-                  </Button>
+        {/* Context Display */}
+        {activeContext.currentFile && (
+          <Card className="bg-muted/50">
+            <CardContent className="py-3">
+              <div className="text-sm space-y-1">
+                <div className="flex items-center gap-2">
+                  <FileCode className="h-4 w-4" />
+                  <span className="font-medium">Current File:</span>
+                  <span className="text-muted-foreground">{activeContext.currentFile}</span>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Response Section */}
-          <div className="flex flex-col gap-4">
-            <Card className="flex-1">
-              <CardHeader>
-                <CardTitle>Assistant Response</CardTitle>
-                <CardDescription>
-                  View code suggestions and explanations
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {isLoadingMessages ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="flex items-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Loading conversation...</span>
-                    </div>
+                {activeContext.language && (
+                  <div className="flex items-center gap-2">
+                    <Code className="h-4 w-4" />
+                    <span className="font-medium">Language:</span>
+                    <span className="text-muted-foreground">{activeContext.language}</span>
                   </div>
-                ) : messages.length === 0 ? (
-                  <div className="text-center py-8 space-y-4">
-                    <Info className="h-12 w-12 mx-auto text-muted-foreground" />
-                    <p className="text-muted-foreground">
-                      Start by writing code or asking a question
-                    </p>
-                  </div>
-                ) : (
-                  <ScrollArea className="h-[600px] pr-4">
-                    <div className="space-y-4">
-                      {messages.map((message) => (
-                        <ChatMessage key={message.id} message={message} />
-                      ))}
-                      <div ref={messagesEndRef} />
-                    </div>
-                  </ScrollArea>
                 )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+                {activeContext.projectScope?.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4" />
+                    <span className="font-medium">Scope:</span>
+                    <span className="text-muted-foreground">
+                      {activeContext.projectScope.join(', ')}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Messages Display */}
+        <Card className="flex-1">
+          <CardContent className="p-4 space-y-4">
+            {isLoadingMessages ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Loading conversation...</span>
+                </div>
+              </div>
+            ) : messages.length === 0 ? (
+              <div className="text-center py-8 space-y-4">
+                <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground" />
+                <div className="space-y-2">
+                  <p className="font-medium">Welcome to your AI Code Assistant</p>
+                  <p className="text-sm text-muted-foreground">
+                    Ask questions or share code for assistance
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <ScrollArea className="h-[500px]">
+                <div className="space-y-4">
+                  {messages.map((message) => (
+                    <ChatMessage key={message.id} message={message} />
+                  ))}
+                  <div ref={messagesEndRef} />
+                </div>
+              </ScrollArea>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Input Section */}
+        <Card>
+          <CardContent className="p-4 space-y-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsEditorOpen(!isEditorOpen)}
+                className="gap-2"
+              >
+                <Code className="h-4 w-4" />
+                {isEditorOpen ? "Hide Code Editor" : "Show Code Editor"}
+                {isEditorOpen ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+
+            <Collapsible open={isEditorOpen}>
+              <CollapsibleContent>
+                <div className="border rounded-lg overflow-hidden mb-4">
+                  <CodeEditor
+                    language={activeContext.language || "typescript"}
+                    value={code}
+                    onChange={setCode}
+                    className="min-h-[200px]"
+                  />
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            <div className="flex gap-2">
+              <textarea
+                className="flex-1 min-h-[60px] p-3 rounded-lg border bg-background resize-none"
+                placeholder={
+                  isEditorOpen
+                    ? "Add any additional context or questions about your code..."
+                    : "Ask a question or describe what you need help with..."
+                }
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage.mutate();
+                  }
+                }}
+              />
+              <Button
+                className="self-end"
+                onClick={() => sendMessage.mutate()}
+                disabled={
+                  sendMessage.isPending ||
+                  (!isEditorOpen && !query.trim()) ||
+                  (isEditorOpen && !code.trim() && !query.trim())
+                }
+              >
+                {sendMessage.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <Send className="h-4 w-4 mr-2" />
+                    Send
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
