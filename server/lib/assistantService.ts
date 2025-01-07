@@ -1,186 +1,106 @@
-import { CodebaseTools } from './codebaseTools';
-import { ContextManager } from './contextManager';
-import { generateChatResponse } from './anthropic';
+import { Anthropic } from '@anthropic-ai/sdk';
 import { db } from "@db";
 import { messages } from "@db/schema";
-import { eq } from "drizzle-orm";
+import { ContextManager } from "./contextManager";
 
-interface ToolCall {
-  name: string;
-  args: Record<string, any>;
+// the newest Anthropic model is "claude-3-5-sonnet-20241022" which was released October 22, 2024
+const MODEL = "claude-3-5-sonnet-20241022";
+
+if (!process.env.ANTHROPIC_API_KEY) {
+  throw new Error("ANTHROPIC_API_KEY environment variable is required");
 }
 
-interface ToolResult {
-  type: string;
-  content: any;
-}
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY
+});
 
 export class AssistantService {
-  static async *processMessage(
-    content: string,
-    conversationId: number
-  ): AsyncGenerator<{ text: string }, void, unknown> {
+  static async processMessage(content: string, conversationId: number) {
     try {
       // Get conversation context
-      const conversationContext = await ContextManager.getConversationContext(
-        conversationId
-      );
+      const conversationContext = await ContextManager.getConversationContext(conversationId);
 
-      // Format the system prompt with tool descriptions
-      const systemPrompt = `You are an AI assistant with access to the LedgerLink codebase through these tools:
+      // Prepare system message with context
+      const systemMessage = this.buildSystemMessage(conversationContext.context);
 
-TOOLS:
-- SEARCH_CODE(query: string) - Search codebase for relevant code
-- ANALYZE_FILE(filePath: string) - Get detailed file analysis
-- GET_PATTERNS(code: string) - Detect code patterns
+      // Prepare conversation history
+      const messageHistory = conversationContext.relevantHistory.map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
 
-To use a tool, output a JSON object like this:
-{
-  "name": "TOOL_NAME",
-  "args": {
-    "paramName": "value"
-  }
-}
+      // Create the stream
+      const stream = await anthropic.messages.create({
+        model: MODEL,
+        max_tokens: 2048,
+        messages: [
+          ...messageHistory,
+          { role: 'user', content }
+        ],
+        system: systemMessage,
+        stream: true
+      });
 
-After each tool call, I will provide the results and you can continue the conversation.
-
-Important:
-- Always search the codebase before answering questions
-- Reference specific files and code patterns
-- Explain architectural decisions with concrete examples
-
-Current conversation:
-${conversationContext.relevantHistory
-  .slice(-5)
-  .map(msg => `${msg.role}: ${msg.content}`)
-  .join('\n')}
-`;
+      // Save assistant message placeholder to get the ID
+      const [assistantMessage] = await db.insert(messages).values({
+        conversationId,
+        role: 'assistant',
+        content: '',
+        contextSnapshot: conversationContext.context,
+        createdAt: new Date()
+      }).returning();
 
       let fullResponse = '';
-      const messages = [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content }
-      ];
 
-      try {
-        const stream = await generateChatResponse(messages);
-
-        for await (const chunk of stream) {
-          // Handle Anthropic's streaming format
-          if (chunk.type === 'content_block_delta' && chunk.delta.text) {
-            const text = chunk.delta.text;
-
-            try {
-              // Check for tool call
-              const toolCall = this.parseToolCall(text);
-              if (toolCall) {
-                try {
-                  const result = await this.executeToolCall(toolCall);
-
-                  // Add tool result to conversation
-                  messages.push(
-                    { role: 'assistant', content: text },
-                    { role: 'system', content: `Tool result: ${JSON.stringify(result)}` }
-                  );
-
-                  // Get continuation 
-                  const continuationStream = await generateChatResponse(messages);
-                  for await (const continuationChunk of continuationStream) {
-                    if (continuationChunk.type === 'content_block_delta' && continuationChunk.delta.text) {
-                      const continuationText = continuationChunk.delta.text;
-                      fullResponse += continuationText;
-                      yield { text: continuationText };
-                    }
-                  }
-                } catch (error) {
-                  console.error('Tool execution error:', error);
-                  const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-                  fullResponse += `\nError executing tool: ${errorMessage}\n`;
-                  yield { text: `\nError executing tool: ${errorMessage}\n` };
-                }
-              } else {
-                fullResponse += text;
-                yield { text: text };
-              }
-            } catch (error) {
-              console.error('Error processing chunk:', error);
-              const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-              yield { text: errorMessage };
+      // Return an async generator that yields message chunks
+      const streamGenerator = async function* () {
+        try {
+          for await (const chunk of stream) {
+            if (chunk.type === 'content_block_delta' && chunk.delta.text) {
+              fullResponse += chunk.delta.text;
+              yield { text: chunk.delta.text };
             }
           }
+
+          // Update the complete message in the database
+          await db
+            .update(messages)
+            .set({ content: fullResponse })
+            .where({ id: assistantMessage.id });
+
+        } catch (error) {
+          console.error('Error in stream processing:', error);
+          throw error;
         }
+      };
 
-        // Save assistant message with proper schema values
-        await db.insert(messages).values({
-          conversationId,
-          role: 'assistant',
-          content: fullResponse,
-          contextSnapshot: {},
-          createdAt: new Date()
-        });
-
-      } catch (error) {
-        console.error('Stream processing error:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        yield { text: `Error: ${errorMessage}` };
-      }
-
+      return streamGenerator();
     } catch (error) {
       console.error('Error processing message:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      yield { text: `Error: ${errorMessage}` };
+      throw error;
     }
   }
 
-  private static parseToolCall(text: string): ToolCall | null {
-    try {
-      if (text.includes('"name":')) {
-        const match = text.match(/\{[^}]+\}/);
-        if (match) {
-          const parsed = JSON.parse(match[0]);
-          if (parsed.name && parsed.args) {
-            return {
-              name: parsed.name,
-              args: parsed.args
-            };
-          }
+  private static buildSystemMessage(context: Record<string, any>): string {
+    let systemMessage = `You are an AI coding assistant helping users with their software development tasks. 
+    You have access to the current conversation context and codebase.`;
+
+    // Add code context if available
+    if (context.codeContext) {
+      systemMessage += `\n\nCurrent technical context:
+      - Language: ${context.codeContext.language || 'Not specified'}
+      - Project context: ${context.codeContext.projectContext || 'Not specified'}
+      ${context.codeContext.patterns ? `- Detected patterns: ${context.codeContext.patterns.join(', ')}` : ''}`;
+
+      // Add relevant files
+      if (context.codeContext.relevantFiles?.length) {
+        systemMessage += '\n\nRelevant code files:';
+        for (const file of context.codeContext.relevantFiles) {
+          systemMessage += `\n\nFile: ${file.path}\n\`\`\`\n${file.snippet}\n\`\`\``;
         }
       }
-      return null;
-    } catch (error) {
-      console.error('Error parsing tool call:', error);
-      return null;
     }
-  }
 
-  private static async executeToolCall(toolCall: ToolCall): Promise<ToolResult> {
-    switch (toolCall.name) {
-      case 'SEARCH_CODE':
-        const searchResults = await CodebaseTools.findReferences(
-          toolCall.args.query,
-          { maxResults: 3 }
-        );
-        return {
-          type: 'code_search_results',
-          content: searchResults
-        };
-
-      case 'ANALYZE_FILE':
-        const analysis = await CodebaseTools.getFileDetails(toolCall.args.filePath);
-        return {
-          type: 'file_analysis',
-          content: analysis
-        };
-
-      case 'GET_PATTERNS':
-        const patterns = await CodebaseTools.detectPatterns(toolCall.args.code);
-        return {
-          type: 'pattern_detection',
-          content: patterns
-        };
-
-      default:
-        throw new Error(`Unknown tool: ${toolCall.name}`);
-    }
+    return systemMessage;
   }
 }

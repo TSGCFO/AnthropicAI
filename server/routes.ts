@@ -254,6 +254,12 @@ def process_financial_transaction(request):
     const { content } = req.body;
     const conversationId = parseInt(req.params.id);
 
+    // Set headers for SSE
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+
     try {
       // Save user message with proper schema values
       await db.insert(messages).values({
@@ -270,10 +276,9 @@ def process_financial_transaction(request):
         .set({ updatedAt: new Date() })
         .where(eq(conversations.id, conversationId));
 
-      // Setup SSE
-      res.setHeader('Content-Type', 'text/event-stream');
-      res.setHeader('Cache-Control', 'no-cache');
-      res.setHeader('Connection', 'keep-alive');
+      const keepAlive = setInterval(() => {
+        res.write(': keep-alive\n\n');
+      }, 15000);
 
       try {
         const stream = await AssistantService.processMessage(content, conversationId);
@@ -290,12 +295,16 @@ def process_financial_transaction(request):
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         res.write(`data: ${JSON.stringify({ error: errorMessage })}\n\n`);
       } finally {
+        clearInterval(keepAlive);
         res.end();
       }
     } catch (error) {
       console.error('Request error:', error);
       if (!res.headersSent) {
         res.status(500).json({ error: "Failed to process message" });
+      } else {
+        res.write(`data: ${JSON.stringify({ error: "Failed to process message" })}\n\n`);
+        res.end();
       }
     }
   });
