@@ -24,11 +24,13 @@ export class AssistantService {
       // Prepare system message with context
       const systemMessage = this.buildSystemMessage(conversationContext.context);
 
-      // Prepare conversation history
-      const messageHistory = conversationContext.relevantHistory.map(msg => ({
-        role: msg.role,
-        content: msg.content
-      }));
+      // Prepare conversation history - filter out empty messages
+      const messageHistory = conversationContext.relevantHistory
+        .filter(msg => msg.content && msg.content.trim() !== '')
+        .map(msg => ({
+          role: msg.role,
+          content: msg.content
+        }));
 
       // Create the stream
       const stream = await anthropic.messages.create({
@@ -57,7 +59,7 @@ export class AssistantService {
       const streamGenerator = async function* () {
         try {
           for await (const chunk of stream) {
-            if (chunk.type === 'content_block_delta' && chunk.delta.text) {
+            if (chunk.type === 'content_block_delta' && 'text' in chunk.delta) {
               fullResponse += chunk.delta.text;
               yield { text: chunk.delta.text };
             }
