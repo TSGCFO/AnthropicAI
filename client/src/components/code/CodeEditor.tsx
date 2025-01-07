@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Copy, Check } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import CodeEditorLib from "@uiw/react-textarea-code-editor";
+import CodeMirror from "@uiw/react-codemirror";
+import { python } from "@codemirror/lang-python";
+import { javascript } from "@codemirror/lang-javascript";
 
 interface CodeEditorProps {
   initialCode?: string;
@@ -22,7 +24,11 @@ interface CodeAnalysis {
   maintainability?: string[];
 }
 
-export function CodeEditor({ initialCode = "", language = "python", onCodeChange }: CodeEditorProps) {
+export function CodeEditor({
+  initialCode = "",
+  language = "python",
+  onCodeChange,
+}: CodeEditorProps) {
   const [code, setCode] = useState(initialCode);
   const [suggestions, setSuggestions] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<CodeAnalysis | null>(null);
@@ -153,9 +159,9 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
     }
   };
 
-  const handleCodeChange = (newCode: string) => {
-    setCode(newCode);
-    onCodeChange?.(newCode);
+  const handleCodeChange = (value: string) => {
+    setCode(value);
+    onCodeChange?.(value);
 
     // Debounce real-time suggestions
     if (debounceTimerRef.current) {
@@ -163,7 +169,7 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
     }
 
     debounceTimerRef.current = setTimeout(() => {
-      if (newCode.trim().length > 10) {
+      if (value.trim().length > 10) {
         requestSuggestion();
       }
     }, 1000);
@@ -205,20 +211,38 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
           <div className="space-y-2">
             <label className="text-sm font-medium">Your Code</label>
             <div className="relative">
-              <CodeEditorLib
+              <CodeMirror
                 value={code}
-                language={language}
-                onChange={(e) => handleCodeChange(e.target.value)}
-                padding={15}
-                style={{
-                  fontSize: 14,
-                  backgroundColor: "var(--background)",
-                  fontFamily: "ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace",
-                  borderRadius: "0.5rem",
-                  border: "1px solid var(--border)",
-                  minHeight: "400px",
+                height="400px"
+                extensions={[language === 'python' ? python() : javascript()]}
+                onChange={handleCodeChange}
+                theme="dark"
+                basicSetup={{
+                  lineNumbers: true,
+                  highlightActiveLineGutter: true,
+                  highlightSpecialChars: true,
+                  history: true,
+                  foldGutter: true,
+                  drawSelection: true,
+                  dropCursor: true,
+                  allowMultipleSelections: true,
+                  indentOnInput: true,
+                  syntaxHighlighting: true,
+                  bracketMatching: true,
+                  closeBrackets: true,
+                  autocompletion: true,
+                  rectangularSelection: true,
+                  crosshairCursor: true,
+                  highlightActiveLine: true,
+                  highlightSelectionMatches: true,
+                  closeBracketsKeymap: true,
+                  defaultKeymap: true,
+                  searchKeymap: true,
+                  historyKeymap: true,
+                  foldKeymap: true,
+                  completionKeymap: true,
+                  lintKeymap: true,
                 }}
-                className="min-h-[400px]"
               />
             </div>
           </div>
@@ -236,7 +260,9 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
                     <TabsTrigger value="performance">Performance</TabsTrigger>
                   )}
                   {analysis?.maintainability && (
-                    <TabsTrigger value="maintainability">Maintainability</TabsTrigger>
+                    <TabsTrigger value="maintainability">
+                      Maintainability
+                    </TabsTrigger>
                   )}
                 </TabsList>
 
@@ -259,16 +285,14 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
                             )}
                           </Button>
                         </div>
-                        <CodeEditorLib
+                        <CodeMirror
                           value={suggestions}
-                          language={language}
-                          readOnly
-                          padding={15}
-                          style={{
-                            fontSize: 14,
-                            backgroundColor: "var(--background)",
-                            fontFamily: "ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace",
-                          }}
+                          height="300px"
+                          extensions={[
+                            language === 'python' ? python() : javascript(),
+                          ]}
+                          editable={false}
+                          theme="dark"
                         />
                       </div>
                     </ScrollArea>
@@ -284,7 +308,9 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
                             <h4 className="font-medium mb-2">Suggestions</h4>
                             <ul className="list-disc pl-5 space-y-1">
                               {analysis.suggestions.map((suggestion, i) => (
-                                <li key={i} className="text-sm">{suggestion}</li>
+                                <li key={i} className="text-sm">
+                                  {suggestion}
+                                </li>
                               ))}
                             </ul>
                           </div>
@@ -295,7 +321,9 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
                             <h4 className="font-medium mb-2">Improvements</h4>
                             <ul className="list-disc pl-5 space-y-1">
                               {analysis.improvements.map((improvement, i) => (
-                                <li key={i} className="text-sm">{improvement}</li>
+                                <li key={i} className="text-sm">
+                                  {improvement}
+                                </li>
                               ))}
                             </ul>
                           </div>
@@ -303,15 +331,18 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
 
                         {analysis.security.length > 0 && (
                           <div>
-                            <h4 className="font-medium mb-2">Security Considerations</h4>
+                            <h4 className="font-medium mb-2">
+                              Security Considerations
+                            </h4>
                             <ul className="list-disc pl-5 space-y-1">
                               {analysis.security.map((issue, i) => (
-                                <li key={i} className="text-sm">{issue}</li>
+                                <li key={i} className="text-sm">
+                                  {issue}
+                                </li>
                               ))}
                             </ul>
                           </div>
                         )}
-
                         {analysis.maintainability && analysis.maintainability.length > 0 && (
                           <div>
                             <h4 className="font-medium mb-2">Maintainability</h4>
@@ -346,50 +377,6 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
                     </ScrollArea>
                   )}
                 </TabsContent>
-
-                {analysis?.patterns && (
-                  <TabsContent value="patterns">
-                    <ScrollArea className="h-[400px] w-full rounded-md border p-4">
-                      <div>
-                        <h4 className="font-medium mb-2">Detected Patterns</h4>
-                        <ul className="list-disc pl-5 space-y-1">
-                          {analysis.patterns.map((pattern, i) => (
-                            <li key={i} className="text-sm">{pattern}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </ScrollArea>
-                  </TabsContent>
-                )}
-
-                {analysis?.performance && (
-                  <TabsContent value="performance">
-                    <ScrollArea className="h-[400px] w-full rounded-md border p-4">
-                      <div>
-                        <h4 className="font-medium mb-2">Performance Analysis</h4>
-                        <ul className="list-disc pl-5 space-y-1">
-                          {analysis.performance.map((item, i) => (
-                            <li key={i} className="text-sm">{item}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </ScrollArea>
-                  </TabsContent>
-                )}
-                {analysis?.maintainability && (
-                  <TabsContent value="maintainability">
-                    <ScrollArea className="h-[400px] w-full rounded-md border p-4">
-                      <div>
-                        <h4 className="font-medium mb-2">Maintainability</h4>
-                        <ul className="list-disc pl-5 space-y-1">
-                          {analysis.maintainability.map((item, i) => (
-                            <li key={i} className="text-sm">{item}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </ScrollArea>
-                  </TabsContent>
-                )}
               </Tabs>
             </div>
           )}
