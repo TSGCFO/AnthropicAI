@@ -9,6 +9,7 @@ import { generateChatResponse } from "./lib/anthropic";
 import { eq, desc, asc } from "drizzle-orm";
 import { ContextManager } from "./lib/contextManager";
 import { indexCodebase } from "./lib/codebaseIndexer";
+import { AssistantService } from './lib/assistantService';
 
 export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
@@ -254,17 +255,12 @@ def process_financial_transaction(request):
     const conversationId = parseInt(req.params.id);
 
     try {
-      // Get current conversation context
-      const conversationContext = await ContextManager.getConversationContext(
-        conversationId
-      );
-
       // Save user message
       const userMessage = await db.insert(messages).values({
         conversationId,
         role: "user",
         content,
-        contextSnapshot: conversationContext.context
+        contextSnapshot: {}
       }).returning();
 
       // Update conversation timestamp
@@ -273,89 +269,29 @@ def process_financial_transaction(request):
         .set({ updatedAt: new Date() })
         .where(eq(conversations.id, conversationId));
 
-      // Get base prompt template
-      const basePrompt = await ContextManager.getEffectivePrompt(
-        'code_assistant_base',
-        {
-          topic: conversationContext.context.topic || "General Discussion",
-          projectContext: conversationContext.context.codeContext?.projectContext || "LedgerLink Development",
-          codePatterns: JSON.stringify(conversationContext.context.codeContext?.patterns || []),
-          conversationHistory: conversationContext.relevantHistory
-            .map(msg => `${msg.role}: ${msg.content}`)
-            .join('\n'),
-          userRequest: content
-        }
-      );
-
       // Setup SSE
       res.setHeader('Content-Type', 'text/event-stream');
       res.setHeader('Cache-Control', 'no-cache');
       res.setHeader('Connection', 'keep-alive');
 
       try {
-        // Format messages for Anthropic
-        const formattedMessages = [
-          {
-            role: 'system',
-            content: basePrompt
-          },
-          ...conversationContext.relevantHistory.map(msg => ({
-            role: msg.role,
-            content: msg.content,
-          })),
-          {
-            role: 'user',
-            content
-          }
-        ];
-
-        const stream = await generateChatResponse(formattedMessages);
+        const stream = await AssistantService.processMessage(content, conversationId);
         let fullResponse = '';
 
         for await (const chunk of stream) {
-          if (chunk.type === 'content_block_delta') {
-            const text = chunk.delta.text;
-            fullResponse += text;
-            res.write(`data: ${JSON.stringify({ text })}\n\n`);
+          if (chunk.text) {
+            fullResponse += chunk.text;
+            res.write(`data: ${JSON.stringify({ text: chunk.text })}\n\n`);
           }
         }
 
-        // Save assistant message with context snapshot
+        // Save assistant message
         await db.insert(messages).values({
           conversationId,
           role: "assistant",
           content: fullResponse,
-          contextSnapshot: conversationContext.context
+          contextSnapshot: {}
         });
-
-        // Learn from the conversation and update context
-        const contextLearningPrompt = await ContextManager.getEffectivePrompt(
-          'context_learning',
-          {
-            conversationHistory: `user: ${content}\nassistant: ${fullResponse}`,
-            topic: conversationContext.context.topic,
-            entities: JSON.stringify(conversationContext.context.entities || {}),
-            codeContext: JSON.stringify(conversationContext.context.codeContext || {})
-          }
-        );
-
-        const contextUpdateStream = await generateChatResponse([
-          { role: 'user', content: contextLearningPrompt }
-        ]);
-
-        let contextUpdateResponse = '';
-        for await (const chunk of contextUpdateStream) {
-          if (chunk.type === 'content_block_delta') {
-            contextUpdateResponse += chunk.delta.text;
-          }
-        }
-
-        try {
-          const contextUpdates = JSON.parse(contextUpdateResponse);
-          await ContextManager.updateContext(conversationId, contextUpdates);
-        } catch (e) {
-          console.error('Failed to parse context updates:', e);
-        }
 
         res.write('data: [DONE]\n\n');
         res.end();
