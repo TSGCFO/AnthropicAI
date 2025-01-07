@@ -26,6 +26,7 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
   const [code, setCode] = useState(initialCode);
   const [suggestions, setSuggestions] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<CodeAnalysis | null>(null);
+  const [explanation, setExplanation] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
@@ -109,6 +110,33 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
     }
   };
 
+  const requestExplanation = async () => {
+    try {
+      const response = await fetch('/api/code/explain', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ code: suggestions || code }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get code explanation');
+      }
+
+      const data = await response.json();
+      setExplanation(data.explanation);
+    } catch (error) {
+      if (error instanceof Error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   const requestSuggestion = async () => {
     if (!code.trim()) {
       toast({
@@ -140,6 +168,7 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
       const data = await response.json();
       setSuggestions(data.suggestion);
       await requestAnalysis();
+      await requestExplanation();
     } catch (error) {
       if (error instanceof Error) {
         toast({
@@ -237,6 +266,9 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
                   )}
                   {analysis?.maintainability && (
                     <TabsTrigger value="maintainability">Maintainability</TabsTrigger>
+                  )}
+                  {explanation && (
+                    <TabsTrigger value="explanation">Explanation</TabsTrigger>
                   )}
                 </TabsList>
 
@@ -376,6 +408,7 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
                     </ScrollArea>
                   </TabsContent>
                 )}
+
                 {analysis?.maintainability && (
                   <TabsContent value="maintainability">
                     <ScrollArea className="h-[400px] w-full rounded-md border p-4">
@@ -386,6 +419,19 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
                             <li key={i} className="text-sm">{item}</li>
                           ))}
                         </ul>
+                      </div>
+                    </ScrollArea>
+                  </TabsContent>
+                )}
+
+                {explanation && (
+                  <TabsContent value="explanation">
+                    <ScrollArea className="h-[400px] w-full rounded-md border p-4">
+                      <div className="prose prose-sm max-w-none">
+                        <h4 className="font-medium mb-2">Code Explanation</h4>
+                        <div className="whitespace-pre-wrap text-sm">
+                          {explanation}
+                        </div>
                       </div>
                     </ScrollArea>
                   </TabsContent>
