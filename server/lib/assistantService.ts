@@ -65,38 +65,39 @@ ${conversationContext.relevantHistory
       const stream = await generateChatResponse(messages);
 
       for await (const chunk of stream) {
-        if (!chunk.content?.[0]?.text) continue;
+        // Handle Anthropic's streaming format
+        if (chunk.type === 'content_block_delta' && chunk.delta.text) {
+          const text = chunk.delta.text;
 
-        const text = chunk.content[0].text;
+          // Check for tool call
+          const toolCall = this.parseToolCall(text);
+          if (toolCall) {
+            try {
+              const result = await this.executeToolCall(toolCall);
 
-        // Check for tool call
-        const toolCall = this.parseToolCall(text);
-        if (toolCall) {
-          try {
-            const result = await this.executeToolCall(toolCall);
+              // Add tool result to conversation
+              messages.push(
+                { role: 'assistant', content: text },
+                { role: 'system', content: `Tool result: ${JSON.stringify(result)}` }
+              );
 
-            // Add tool result to conversation
-            messages.push(
-              { role: 'assistant', content: text },
-              { role: 'system', content: `Tool result: ${JSON.stringify(result)}` }
-            );
-
-            // Get continuation 
-            const continuationStream = await generateChatResponse(messages);
-            for await (const continuationChunk of continuationStream) {
-              if (continuationChunk.content?.[0]?.text) {
-                const continuationText = continuationChunk.content[0].text;
-                fullResponse += continuationText;
-                yield { text: continuationText };
+              // Get continuation 
+              const continuationStream = await generateChatResponse(messages);
+              for await (const continuationChunk of continuationStream) {
+                if (continuationChunk.type === 'content_block_delta' && continuationChunk.delta.text) {
+                  const continuationText = continuationChunk.delta.text;
+                  fullResponse += continuationText;
+                  yield { text: continuationText };
+                }
               }
+            } catch (error) {
+              console.error('Tool execution error:', error);
+              yield { text: `\nError executing tool: ${error instanceof Error ? error.message : 'Unknown error'}\n` };
             }
-          } catch (error) {
-            console.error('Tool execution error:', error);
-            yield { text: `\nError executing tool: ${error instanceof Error ? error.message : 'Unknown error'}\n` };
+          } else {
+            fullResponse += text;
+            yield { text };
           }
-        } else {
-          fullResponse += text;
-          yield { text: text };
         }
       }
 
