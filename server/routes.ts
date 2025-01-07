@@ -27,7 +27,17 @@ export function registerRoutes(app: Express): Server {
   // Code browser endpoints
   app.get("/api/codebase/tree", async (req, res) => {
     try {
-      const root = process.cwd();
+      // Try to read from LedgerLink codebase path first
+      const ledgerLinkPath = process.env.LEDGERLINK_PATH || '../LedgerLink';
+      const root = ledgerLinkPath;
+
+      try {
+        await readdir(root);
+      } catch (error) {
+        // Fallback to current directory if LedgerLink path is not accessible
+        console.warn('LedgerLink codebase not found, falling back to current directory');
+        root = process.cwd();
+      }
 
       async function buildTree(dir: string): Promise<any> {
         const entries = await readdir(dir, { withFileTypes: true });
@@ -112,9 +122,21 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).json({ error: 'Path parameter is required' });
       }
 
+      // Try LedgerLink path first
+      const ledgerLinkPath = process.env.LEDGERLINK_PATH || '../LedgerLink';
+      let root = ledgerLinkPath;
+
+      try {
+        await readdir(root);
+      } catch (error) {
+        // Fallback to current directory if LedgerLink path is not accessible
+        console.warn('LedgerLink codebase not found, falling back to current directory');
+        root = process.cwd();
+      }
+
       // Prevent directory traversal
-      const normalizedPath = join(process.cwd(), path).replace(/\.\./g, '');
-      if (!normalizedPath.startsWith(process.cwd())) {
+      const normalizedPath = join(root, path).replace(/\.\./g, '');
+      if (!normalizedPath.startsWith(root)) {
         return res.status(403).json({ error: 'Access denied' });
       }
 
