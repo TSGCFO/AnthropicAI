@@ -5,19 +5,6 @@ import { db } from "@db";
 import { messages } from "@db/schema";
 import { eq } from "drizzle-orm";
 
-interface AssistantContext {
-  topic?: string;
-  codeContext?: {
-    relevantCode?: Array<{
-      filePath: string;
-      content: string;
-      language: string;
-    }>;
-    patterns?: string[];
-    description?: string;
-  };
-}
-
 interface ToolCall {
   name: string;
   args: Record<string, any>;
@@ -29,11 +16,8 @@ interface ToolResult {
 }
 
 export class AssistantService {
-  /**
-   * Process a user message with enhanced codebase access through tools
-   */
   static async *processMessage(
-    message: string,
+    content: string,
     conversationId: number
   ): AsyncGenerator<{ text: string }, void, unknown> {
     try {
@@ -75,7 +59,7 @@ ${conversationContext.relevantHistory
       let fullResponse = '';
       const messages = [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: message }
+        { role: 'user', content }
       ];
 
       const stream = await generateChatResponse(messages);
@@ -112,16 +96,17 @@ ${conversationContext.relevantHistory
           }
         } else {
           fullResponse += text;
-          yield { text };
+          yield { text: text };
         }
       }
 
-      // Save assistant message
+      // Save assistant message with proper schema values
       await db.insert(messages).values({
         conversationId,
-        role: "assistant",
+        role: 'assistant',
         content: fullResponse,
-        contextSnapshot: {}
+        contextSnapshot: {},
+        createdAt: new Date()
       });
 
     } catch (error) {

@@ -255,12 +255,13 @@ def process_financial_transaction(request):
     const conversationId = parseInt(req.params.id);
 
     try {
-      // Save user message
+      // Save user message with proper schema values
       await db.insert(messages).values({
         conversationId,
         role: "user",
         content,
-        contextSnapshot: {}
+        contextSnapshot: {},
+        createdAt: new Date()
       });
 
       // Update conversation timestamp
