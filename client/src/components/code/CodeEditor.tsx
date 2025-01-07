@@ -3,6 +3,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface CodeEditorProps {
   initialCode?: string;
@@ -10,9 +12,16 @@ interface CodeEditorProps {
   onCodeChange?: (code: string) => void;
 }
 
+interface CodeAnalysis {
+  suggestions: string[];
+  improvements: string[];
+  security: string[];
+}
+
 export function CodeEditor({ initialCode = "", language = "python", onCodeChange }: CodeEditorProps) {
   const [code, setCode] = useState(initialCode);
   const [suggestions, setSuggestions] = useState<string | null>(null);
+  const [analysis, setAnalysis] = useState<CodeAnalysis | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const { toast } = useToast();
@@ -63,6 +72,33 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
     };
   }, [toast]);
 
+  const requestAnalysis = async () => {
+    try {
+      const response = await fetch('/api/code/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ code }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to analyze code');
+      }
+
+      const data = await response.json();
+      setAnalysis(data);
+    } catch (error) {
+      if (error instanceof Error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   const requestSuggestion = async () => {
     if (!code.trim()) {
       toast({
@@ -93,12 +129,15 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
 
       const data = await response.json();
       setSuggestions(data.suggestion);
+      await requestAnalysis();
     } catch (error) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      if (error instanceof Error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -132,6 +171,7 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
 
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
+            <label className="text-sm font-medium">Your Code</label>
             <textarea
               value={code}
               onChange={handleCodeChange}
@@ -140,12 +180,68 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
             />
           </div>
 
-          {suggestions && (
-            <div className="space-y-2">
-              <h4 className="font-medium">Suggestions</h4>
-              <pre className="p-4 rounded-md bg-muted whitespace-pre-wrap overflow-auto max-h-[400px]">
-                {suggestions}
-              </pre>
+          {(suggestions || analysis) && (
+            <div className="space-y-4">
+              <Tabs defaultValue="suggestions">
+                <TabsList>
+                  <TabsTrigger value="suggestions">Suggestions</TabsTrigger>
+                  <TabsTrigger value="analysis">Analysis</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="suggestions">
+                  {suggestions && (
+                    <ScrollArea className="h-[400px] w-full rounded-md border p-4">
+                      <div className="space-y-2">
+                        <h4 className="font-medium">Improved Code</h4>
+                        <pre className="whitespace-pre-wrap overflow-auto">
+                          {suggestions}
+                        </pre>
+                      </div>
+                    </ScrollArea>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="analysis">
+                  {analysis && (
+                    <ScrollArea className="h-[400px] w-full rounded-md border p-4">
+                      <div className="space-y-4">
+                        {analysis.suggestions.length > 0 && (
+                          <div>
+                            <h4 className="font-medium mb-2">Suggestions</h4>
+                            <ul className="list-disc pl-5 space-y-1">
+                              {analysis.suggestions.map((suggestion, i) => (
+                                <li key={i} className="text-sm">{suggestion}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {analysis.improvements.length > 0 && (
+                          <div>
+                            <h4 className="font-medium mb-2">Improvements</h4>
+                            <ul className="list-disc pl-5 space-y-1">
+                              {analysis.improvements.map((improvement, i) => (
+                                <li key={i} className="text-sm">{improvement}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {analysis.security.length > 0 && (
+                          <div>
+                            <h4 className="font-medium mb-2">Security Considerations</h4>
+                            <ul className="list-disc pl-5 space-y-1">
+                              {analysis.security.map((issue, i) => (
+                                <li key={i} className="text-sm">{issue}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </ScrollArea>
+                  )}
+                </TabsContent>
+              </Tabs>
             </div>
           )}
         </div>
