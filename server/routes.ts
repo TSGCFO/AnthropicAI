@@ -8,12 +8,18 @@ import { conversations, messages, codePatterns, promptTemplates } from "@db/sche
 import { generateChatResponse } from "./lib/anthropic";
 import { eq, desc, asc } from "drizzle-orm";
 import { ContextManager } from "./lib/contextManager";
+import { indexCodebase } from "./lib/codebaseIndexer";
 
 export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
 
   // Setup WebSocket server for real-time code assistance
   const wss = setupWebSocketServer(httpServer);
+
+  // Initialize codebase indexing
+  indexCodebase().catch(error => {
+    console.error('Failed to index codebase:', error);
+  });
 
   // Code pattern endpoints
   app.post("/api/patterns/detect", async (req, res) => {

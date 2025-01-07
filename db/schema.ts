@@ -26,7 +26,7 @@ export const messages = pgTable("messages", {
 
 export const conversationTopics = pgTable("conversation_topics", {
   id: serial("id").primaryKey(),
-  name: text("name").notNull(),
+  name: text("name").notNull().unique(),
   description: text("description"),
   parentId: integer("parent_id").references(() => conversationTopics.id),
   contextData: jsonb("context_data").default({}).notNull(),
@@ -37,7 +37,7 @@ export const conversationTopics = pgTable("conversation_topics", {
 
 export const promptTemplates = pgTable("prompt_templates", {
   id: serial("id").primaryKey(),
-  name: text("name").notNull(),
+  name: text("name").notNull().unique(),
   description: text("description"),
   template: text("template").notNull(),
   contextRequirements: jsonb("context_requirements").default([]).notNull(),
@@ -48,28 +48,17 @@ export const promptTemplates = pgTable("prompt_templates", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const conversationRelations = relations(conversations, ({ many, one }) => ({
-  messages: many(messages),
-  topic: one(conversationTopics, {
-    fields: [conversations.topic],
-    references: [conversationTopics.name],
-  }),
-}));
-
-export const messageRelations = relations(messages, ({ one }) => ({
-  conversation: one(conversations, {
-    fields: [messages.conversationId],
-    references: [conversations.id],
-  }),
-}));
-
-export const topicRelations = relations(conversationTopics, ({ one, many }) => ({
-  parent: one(conversationTopics, {
-    fields: [conversationTopics.parentId],
-    references: [conversationTopics.id],
-  }),
-  children: many(conversationTopics),
-}));
+export const codeSnippets = pgTable("code_snippets", {
+  id: serial("id").primaryKey(),
+  filePath: text("file_path").notNull(),
+  content: text("content").notNull(),
+  language: text("language").notNull(),
+  category: text("category").notNull(), 
+  description: text("description"),
+  metadata: jsonb("metadata").default({}).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
 
 export const codePatterns = pgTable("code_patterns", {
   id: serial("id").primaryKey(),
@@ -96,6 +85,31 @@ export const patternSuggestions = pgTable("pattern_suggestions", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Relations
+export const conversationRelations = relations(conversations, ({ many, one }) => ({
+  messages: many(messages),
+  topic: one(conversationTopics, {
+    fields: [conversations.topic],
+    references: [conversationTopics.name],
+  }),
+}));
+
+export const messageRelations = relations(messages, ({ one }) => ({
+  conversation: one(conversations, {
+    fields: [messages.conversationId],
+    references: [conversations.id],
+  }),
+}));
+
+export const topicRelations = relations(conversationTopics, ({ one, many }) => ({
+  parent: one(conversationTopics, {
+    fields: [conversationTopics.parentId],
+    references: [conversationTopics.id],
+  }),
+  children: many(conversationTopics),
+}));
+
+// Schemas for validation
 export const insertConversationSchema = createInsertSchema(conversations);
 export const selectConversationSchema = createSelectSchema(conversations);
 export const insertMessageSchema = createInsertSchema(messages);
@@ -108,10 +122,14 @@ export const insertCodePatternSchema = createInsertSchema(codePatterns);
 export const selectCodePatternSchema = createSelectSchema(codePatterns);
 export const insertPatternSuggestionSchema = createInsertSchema(patternSuggestions);
 export const selectPatternSuggestionSchema = createSelectSchema(patternSuggestions);
+export const insertCodeSnippetSchema = createInsertSchema(codeSnippets);
+export const selectCodeSnippetSchema = createSelectSchema(codeSnippets);
 
+// Types
 export type Conversation = typeof conversations.$inferSelect;
 export type Message = typeof messages.$inferSelect;
 export type ConversationTopic = typeof conversationTopics.$inferSelect;
 export type PromptTemplate = typeof promptTemplates.$inferSelect;
+export type CodeSnippet = typeof codeSnippets.$inferSelect;
 export type CodePattern = typeof codePatterns.$inferSelect;
 export type PatternSuggestion = typeof patternSuggestions.$inferSelect;
