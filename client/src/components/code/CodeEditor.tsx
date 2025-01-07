@@ -17,6 +17,9 @@ interface CodeAnalysis {
   suggestions: string[];
   improvements: string[];
   security: string[];
+  patterns?: string[];
+  performance?: string[];
+  maintainability?: string[];
 }
 
 export function CodeEditor({ initialCode = "", language = "python", onCodeChange }: CodeEditorProps) {
@@ -226,6 +229,15 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
                 <TabsList>
                   <TabsTrigger value="suggestions">Suggestions</TabsTrigger>
                   <TabsTrigger value="analysis">Analysis</TabsTrigger>
+                  {analysis?.patterns && (
+                    <TabsTrigger value="patterns">Patterns</TabsTrigger>
+                  )}
+                  {analysis?.performance && (
+                    <TabsTrigger value="performance">Performance</TabsTrigger>
+                  )}
+                  {analysis?.maintainability && (
+                    <TabsTrigger value="maintainability">Maintainability</TabsTrigger>
+                  )}
                 </TabsList>
 
                 <TabsContent value="suggestions">
@@ -299,10 +311,85 @@ export function CodeEditor({ initialCode = "", language = "python", onCodeChange
                             </ul>
                           </div>
                         )}
+
+                        {analysis.maintainability && analysis.maintainability.length > 0 && (
+                          <div>
+                            <h4 className="font-medium mb-2">Maintainability</h4>
+                            <ul className="list-disc pl-5 space-y-1">
+                              {analysis.maintainability.map((item, i) => (
+                                <li key={i} className="text-sm">{item}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {analysis.patterns && analysis.patterns.length > 0 && (
+                          <div>
+                            <h4 className="font-medium mb-2">Detected Patterns</h4>
+                            <ul className="list-disc pl-5 space-y-1">
+                              {analysis.patterns.map((pattern, i) => (
+                                <li key={i} className="text-sm">{pattern}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {analysis.performance && analysis.performance.length > 0 && (
+                          <div>
+                            <h4 className="font-medium mb-2">Performance Analysis</h4>
+                            <ul className="list-disc pl-5 space-y-1">
+                              {analysis.performance.map((item, i) => (
+                                <li key={i} className="text-sm">{item}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
                       </div>
                     </ScrollArea>
                   )}
                 </TabsContent>
+
+                {analysis?.patterns && (
+                  <TabsContent value="patterns">
+                    <ScrollArea className="h-[400px] w-full rounded-md border p-4">
+                      <div>
+                        <h4 className="font-medium mb-2">Detected Patterns</h4>
+                        <ul className="list-disc pl-5 space-y-1">
+                          {analysis.patterns.map((pattern, i) => (
+                            <li key={i} className="text-sm">{pattern}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </ScrollArea>
+                  </TabsContent>
+                )}
+
+                {analysis?.performance && (
+                  <TabsContent value="performance">
+                    <ScrollArea className="h-[400px] w-full rounded-md border p-4">
+                      <div>
+                        <h4 className="font-medium mb-2">Performance Analysis</h4>
+                        <ul className="list-disc pl-5 space-y-1">
+                          {analysis.performance.map((item, i) => (
+                            <li key={i} className="text-sm">{item}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </ScrollArea>
+                  </TabsContent>
+                )}
+                {analysis?.maintainability && (
+                  <TabsContent value="maintainability">
+                    <ScrollArea className="h-[400px] w-full rounded-md border p-4">
+                      <div>
+                        <h4 className="font-medium mb-2">Maintainability</h4>
+                        <ul className="list-disc pl-5 space-y-1">
+                          {analysis.maintainability.map((item, i) => (
+                            <li key={i} className="text-sm">{item}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </ScrollArea>
+                  </TabsContent>
+                )}
               </Tabs>
             </div>
           )}

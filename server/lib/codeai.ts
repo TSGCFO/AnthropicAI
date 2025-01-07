@@ -39,7 +39,11 @@ export async function generateCodeSuggestion(context: CodeContext): Promise<Code
     3. Audit logging
     4. Transaction management
     5. Input validation
-    6. Performance optimization`;
+    6. Performance optimization
+    7. Code patterns recognition
+    8. Context awareness
+    9. Type safety
+    10. Memory efficiency`;
 
     const prompt = `Given the following context:
     File: ${context.currentFile}
@@ -97,24 +101,46 @@ export async function analyzeCode(code: string): Promise<{
   suggestions: string[];
   improvements: string[];
   security: string[];
+  patterns?: string[];
+  performance?: string[];
+  maintainability?: string[];
 }> {
   try {
-    const systemPrompt = "You are a code analysis expert specializing in financial systems security and best practices.";
-    const prompt = `Analyze this code and provide feedback in JSON format:
+    const systemPrompt = `You are a code analysis expert specializing in:
+    1. Code quality assessment
+    2. Security vulnerability detection
+    3. Performance optimization
+    4. Design pattern recognition
+    5. Best practices enforcement
+    6. Code smell detection
+    7. Complexity analysis
+    8. Type safety verification
+    9. Memory leak detection
+    10. Runtime optimization opportunities`;
+
+    const prompt = `Analyze this code and provide detailed feedback in JSON format:
     ${code}
 
     Consider:
     1. Security vulnerabilities
-    2. Performance issues
-    3. Error handling
-    4. Best practices
-    5. Financial data safety
+    2. Performance bottlenecks
+    3. Error handling patterns
+    4. Code organization
+    5. Type safety
+    6. Memory management
+    7. API design
+    8. Scalability concerns
+    9. Testing strategies
+    10. Documentation needs
 
     Format as:
     {
       "suggestions": ["list", "of", "suggestions"],
       "improvements": ["list", "of", "improvements"],
-      "security": ["list", "of", "security", "concerns"]
+      "security": ["list", "of", "security", "concerns"],
+      "patterns": ["list", "of", "detected", "patterns"],
+      "performance": ["list", "of", "performance", "considerations"],
+      "maintainability": ["list", "of", "maintainability", "issues"]
     }`;
 
     const completion = await openai.chat.completions.create({
@@ -147,7 +173,17 @@ export async function explainCode(code: string): Promise<string> {
       messages: [
         {
           role: "system",
-          content: "You are an expert programmer. Explain the following code in a clear and concise manner, focusing on its purpose, security implications, and best practices."
+          content: `You are an expert programmer. Explain the following code in a clear and concise manner, focusing on:
+          1. Purpose and functionality
+          2. Security implications
+          3. Performance characteristics
+          4. Best practices followed
+          5. Potential improvements
+          6. Design patterns used
+          7. Error handling strategy
+          8. Type safety considerations
+          9. Memory management approach
+          10. API design principles`
         },
         {
           role: "user",
