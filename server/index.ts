@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { CodePatternService } from "./lib/codePatternService";
 
 const app = express();
 app.use(express.json());
@@ -49,26 +50,35 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Register API routes first
-  const server = registerRoutes(app);
+  try {
+    // Initialize code pattern service
+    await CodePatternService.initialize();
+    log('Code Pattern Service initialized successfully');
 
-  // Error handling middleware
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-    console.error(`Error: ${message}`);
-    res.status(status).json({ message });
-  });
+    // Register API routes first
+    const server = registerRoutes(app);
 
-  // Setup Vite AFTER registering API routes so it doesn't intercept them
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
+    // Error handling middleware
+    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
+      console.error(`Error: ${message}`);
+      res.status(status).json({ message });
+    });
+
+    // Setup Vite AFTER registering API routes so it doesn't intercept them
+    if (app.get("env") === "development") {
+      await setupVite(app, server);
+    } else {
+      serveStatic(app);
+    }
+
+    const PORT = 5000;
+    server.listen(PORT, "0.0.0.0", () => {
+      log(`Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
   }
-
-  const PORT = 5000;
-  server.listen(PORT, "0.0.0.0", () => {
-    log(`Server running on port ${PORT}`);
-  });
 })();

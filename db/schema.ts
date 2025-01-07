@@ -70,6 +70,11 @@ export const codePatterns = pgTable("code_patterns", {
   context: jsonb("context").notNull().default({}),
   usageCount: integer("usage_count").notNull().default(0),
   confidence: integer("confidence").notNull().default(0),
+  projectPath: text("project_path"),
+  dependencies: jsonb("dependencies").default([]).notNull(),
+  complexity: integer("complexity").default(0).notNull(),
+  lastUsed: timestamp("last_used").defaultNow().notNull(),
+  metadata: jsonb("metadata").default({}).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => {
@@ -86,10 +91,15 @@ export const patternSuggestions = pgTable("pattern_suggestions", {
   context: text("context").notNull(),
   confidence: integer("confidence").notNull(),
   accepted: boolean("accepted").notNull().default(false),
+  feedback: integer("feedback"),
+  suggestedAt: timestamp("suggested_at").defaultNow().notNull(),
+  userResponse: text("user_response"),
+  responseTime: integer("response_time"),
+  relevanceScore: integer("relevance_score"),
+  metadata: jsonb("metadata").default({}).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Relations
 export const conversationRelations = relations(conversations, ({ many, one }) => ({
   messages: many(messages),
   topic: one(conversationTopics, {
@@ -113,7 +123,10 @@ export const topicRelations = relations(conversationTopics, ({ one, many }) => (
   children: many(conversationTopics),
 }));
 
-// Schemas for validation
+export const patternRelations = relations(codePatterns, ({ many }) => ({
+  suggestions: many(patternSuggestions),
+}));
+
 export const insertConversationSchema = createInsertSchema(conversations);
 export const selectConversationSchema = createSelectSchema(conversations);
 export const insertMessageSchema = createInsertSchema(messages);
@@ -129,7 +142,6 @@ export const selectPatternSuggestionSchema = createSelectSchema(patternSuggestio
 export const insertCodeSnippetSchema = createInsertSchema(codeSnippets);
 export const selectCodeSnippetSchema = createSelectSchema(codeSnippets);
 
-// Types
 export type Conversation = typeof conversations.$inferSelect;
 export type Message = typeof messages.$inferSelect;
 export type ConversationTopic = typeof conversationTopics.$inferSelect;
