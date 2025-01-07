@@ -1,6 +1,6 @@
 import { db } from "@db";
 import { conversations, messages, conversationTopics, promptTemplates, codeSnippets, codePatterns } from "@db/schema";
-import { eq, desc, sql, like } from "drizzle-orm";
+import { eq, desc, sql, like, and, or } from "drizzle-orm";
 import { detectPatterns } from "./patterns";
 
 interface ContextData {
@@ -33,22 +33,57 @@ interface ConversationContext {
 export class ContextManager {
   static async indexCodebase(filePath: string, content: string, language: string, category: string) {
     try {
-      // Detect patterns in the code
+      // Enhanced pattern detection with more specific patterns
       const { patterns, confidence } = await detectPatterns(content, language);
 
-      // Store the code snippet
-      await db.insert(codeSnippets).values({
-        filePath,
-        content,
-        language,
-        category,
-        description: `Code from ${filePath}, containing patterns: ${patterns.join(', ')}`,
-        metadata: {
-          patterns,
-          confidence,
-          indexedAt: new Date().toISOString()
-        }
-      });
+      // Extract meaningful code segments
+      const segments = content.split('\n\n').filter(segment => 
+        segment.trim().length > 0 && 
+        !segment.trim().startsWith('//') && 
+        !segment.trim().startsWith('/*') &&
+        !segment.trim().startsWith('#')
+      );
+
+      // Store each meaningful segment separately
+      for (const segment of segments) {
+        const description = `${category} code from ${filePath}${patterns.length ? `, implementing patterns: ${patterns.join(', ')}` : ''}`;
+
+        await db.insert(codeSnippets).values({
+          filePath,
+          content: segment,
+          language,
+          category,
+          description,
+          metadata: {
+            patterns,
+            confidence,
+            indexedAt: new Date().toISOString(),
+            lineCount: segment.split('\n').length,
+            complexity: calculateComplexity(segment)
+          }
+        });
+      }
+
+      // Store pattern associations
+      for (const pattern of patterns) {
+        await db.insert(codePatterns).values({
+          name: pattern,
+          description: `Pattern detected in ${filePath}`,
+          example: content,
+          language,
+          metadata: {
+            confidence,
+            detectedIn: filePath,
+            category
+          }
+        }).onConflictDoUpdate({
+          target: [codePatterns.name, codePatterns.language],
+          set: {
+            usageCount: sql`${codePatterns.usageCount} + 1`,
+            updatedAt: new Date()
+          }
+        });
+      }
     } catch (error) {
       console.error(`Error indexing codebase: ${error}`);
     }
@@ -57,17 +92,37 @@ export class ContextManager {
   static async findRelevantCode(topic: string, language?: string): Promise<typeof codeSnippets.$inferSelect[]> {
     try {
       const query = db.select().from(codeSnippets);
+      const searchTerms = topic.toLowerCase().split(' ');
 
       if (language) {
         query.where(eq(codeSnippets.language, language));
       }
 
-      // Search in file paths, content and descriptions
-      query.where(sql`
-        ${codeSnippets.filePath} ILIKE ${`%${topic}%`} OR
-        ${codeSnippets.content} ILIKE ${`%${topic}%`} OR
-        ${codeSnippets.description} ILIKE ${`%${topic}%`}
-      `);
+      // Improved search with multiple term matching and pattern consideration
+      query.where(
+        or(
+          ...searchTerms.map(term => 
+            or(
+              like(sql`LOWER(${codeSnippets.filePath})`, `%${term}%`),
+              like(sql`LOWER(${codeSnippets.content})`, `%${term}%`),
+              like(sql`LOWER(${codeSnippets.description})`, `%${term}%`),
+              sql`${codeSnippets.metadata}->>'patterns' ILIKE ${`%${term}%`}`
+            )
+          )
+        )
+      );
+
+      // Order by relevance and limit results
+      query.orderBy(desc(sql`
+        (CASE 
+          WHEN ${codeSnippets.category} = 'models' THEN 5
+          WHEN ${codeSnippets.category} = 'routes' THEN 4
+          WHEN ${codeSnippets.category} = 'services' THEN 3
+          WHEN ${codeSnippets.category} = 'utilities' THEN 2
+          ELSE 1
+        END)
+      `));
+      query.limit(10);
 
       return await query.execute();
     } catch (error) {
@@ -80,19 +135,17 @@ export class ContextManager {
     conversationId: number,
     newContext: Partial<ContextData>
   ): Promise<ContextData> {
-    // Get current conversation to check if topic changed
     const conversation = await db.query.conversations.findFirst({
       where: eq(conversations.id, conversationId)
     });
 
     if (conversation && newContext.topic && newContext.topic !== conversation.topic) {
-      // Topic changed, find relevant code snippets
+      // Find relevant code snippets when topic changes
       const relevantCode = await this.findRelevantCode(
         newContext.topic,
         newContext.codeContext?.language
       );
 
-      // Update code context with relevant files
       if (relevantCode.length > 0) {
         if (!newContext.codeContext) newContext.codeContext = {};
         newContext.codeContext.relevantFiles = relevantCode.map(code => ({
@@ -100,6 +153,15 @@ export class ContextManager {
           snippet: code.content,
           description: code.description || '',
         }));
+
+        // Extract patterns from relevant code
+        const patterns = new Set<string>();
+        relevantCode.forEach(code => {
+          const codePatterns = code.metadata?.patterns || [];
+          codePatterns.forEach(pattern => patterns.add(pattern));
+        });
+
+        newContext.codeContext.patterns = Array.from(patterns);
       }
     }
 
@@ -164,76 +226,6 @@ export class ContextManager {
       })),
     };
   }
-
-  static async updateTopicContext(
-    topic: string,
-    contextData: Record<string, any>
-  ): Promise<void> {
-    const existingTopic = await db.query.conversationTopics.findFirst({
-      where: eq(conversationTopics.name, topic),
-    });
-
-    if (existingTopic) {
-      await db
-        .update(conversationTopics)
-        .set({
-          contextData: sql`${conversationTopics.contextData} || ${JSON.stringify(contextData)}::jsonb`,
-          usageCount: sql`${conversationTopics.usageCount} + 1`,
-          updatedAt: new Date(),
-        })
-        .where(eq(conversationTopics.id, existingTopic.id));
-    } else {
-      await db.insert(conversationTopics).values({
-        name: topic,
-        contextData,
-        usageCount: 1,
-      });
-    }
-  }
-
-  static async getEffectivePrompt(
-    templateName: string,
-    context: ContextData
-  ): Promise<string> {
-    const template = await db.query.promptTemplates.findFirst({
-      where: eq(promptTemplates.name, templateName),
-    });
-
-    if (!template) {
-      throw new Error(`Prompt template '${templateName}' not found`);
-    }
-
-    // Update usage statistics
-    await db
-      .update(promptTemplates)
-      .set({
-        usageCount: sql`${promptTemplates.usageCount} + 1`,
-        updatedAt: new Date(),
-      })
-      .where(eq(promptTemplates.id, template.id));
-
-    // Include code context in variable replacement
-    let prompt = template.template;
-    const variables = template.variables as string[];
-
-    for (const variable of variables) {
-      const value = getValueFromContext(context, variable);
-      if (value) {
-        prompt = prompt.replace(`{${variable}}`, value);
-      }
-    }
-
-    // If there are relevant files, append them to the prompt
-    if (context.codeContext?.relevantFiles?.length) {
-      prompt += "\n\nRelevant code from the project:\n";
-      for (const file of context.codeContext.relevantFiles) {
-        prompt += `\nFile: ${file.path}\n\`\`\`\n${file.snippet}\n\`\`\`\n`;
-      }
-    }
-
-    return prompt;
-  }
-
   static async recordPromptEffectiveness(
     templateName: string,
     effectiveness: number
@@ -246,6 +238,31 @@ export class ContextManager {
       })
       .where(eq(promptTemplates.name, templateName));
   }
+}
+
+// Helper function to calculate code complexity
+function calculateComplexity(code: string): number {
+  const lines = code.split('\n');
+  let complexity = 1;
+
+  // Increase complexity for control structures and function definitions
+  const patterns = [
+    /\b(if|else|for|while|switch|case)\b/,
+    /\b(function|class|interface|enum)\b/,
+    /\b(try|catch|finally)\b/,
+    /\b(async|await)\b/,
+    /\b(map|filter|reduce|forEach)\b/
+  ];
+
+  for (const line of lines) {
+    for (const pattern of patterns) {
+      if (pattern.test(line)) {
+        complexity++;
+      }
+    }
+  }
+
+  return complexity;
 }
 
 // Helper function to get nested values from context
