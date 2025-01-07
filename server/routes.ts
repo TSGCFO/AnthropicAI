@@ -4,9 +4,10 @@ import { setupWebSocketServer } from './lib/wsHandler';
 import { generateCodeSuggestion, analyzeCode, explainCode } from './lib/codeai';
 import { detectPatterns, suggestPatterns, storeCodePattern, recordPatternUsage } from './lib/patterns';
 import { db } from "@db";
-import { conversations, messages, codePatterns } from "@db/schema";
+import { conversations, messages, codePatterns, promptTemplates } from "@db/schema";
 import { generateChatResponse } from "./lib/anthropic";
 import { eq, desc, asc } from "drizzle-orm";
+import { ContextManager } from "./lib/contextManager";
 
 export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
@@ -159,11 +160,16 @@ def process_financial_transaction(request):
     }
   });
 
-  // Create a new conversation
+  // Create a new conversation with initial context
   app.post("/api/conversations", async (req, res) => {
     try {
+      const { title, initialContext } = req.body;
       const conversation = await db.insert(conversations)
-        .values({ title: "New Chat" })
+        .values({
+          title: title || "New Chat",
+          context: initialContext || {},
+          metadata: { startedAt: new Date().toISOString() }
+        })
         .returning();
       res.json(conversation[0]);
     } catch (error) {
@@ -171,7 +177,7 @@ def process_financial_transaction(request):
     }
   });
 
-  // Get all conversations
+  // Get conversations with context
   app.get("/api/conversations", async (req, res) => {
     try {
       const allConversations = await db.query.conversations.findMany({
@@ -189,48 +195,70 @@ def process_financial_transaction(request):
     }
   });
 
-  // Get messages for a conversation
+  // Get messages with context for a conversation
   app.get("/api/conversations/:id/messages", async (req, res) => {
     try {
+      const conversationContext = await ContextManager.getConversationContext(
+        parseInt(req.params.id)
+      );
+
       const conversationMessages = await db.query.messages.findMany({
         where: eq(messages.conversationId, parseInt(req.params.id)),
         orderBy: [asc(messages.createdAt)],
       });
-      res.json(conversationMessages);
+
+      res.json({
+        messages: conversationMessages,
+        context: conversationContext.context
+      });
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch messages" });
     }
   });
 
-  // Update conversation title
+  // Update conversation title and context
   app.patch("/api/conversations/:id", async (req, res) => {
-    const { title } = req.body;
+    const { title, context } = req.body;
     try {
+      let updates: any = { updatedAt: new Date() };
+      if (title) updates.title = title;
+      if (context) {
+        const updatedContext = await ContextManager.updateContext(
+          parseInt(req.params.id),
+          context
+        );
+        updates.context = updatedContext;
+      }
+
       const updated = await db
         .update(conversations)
-        .set({
-          title,
-          updatedAt: new Date(),
-        })
+        .set(updates)
         .where(eq(conversations.id, parseInt(req.params.id)))
         .returning();
+
       res.json(updated[0]);
     } catch (error) {
       res.status(500).json({ error: "Failed to update conversation" });
     }
   });
 
-  // Send a message and get AI response
+  // Send a message and get AI response with context management
   app.post("/api/conversations/:id/messages", async (req, res) => {
     const { content } = req.body;
     const conversationId = parseInt(req.params.id);
 
     try {
+      // Get current conversation context
+      const conversationContext = await ContextManager.getConversationContext(
+        conversationId
+      );
+
       // Save user message
       const userMessage = await db.insert(messages).values({
         conversationId,
         role: "user",
         content,
+        contextSnapshot: conversationContext.context
       }).returning();
 
       // Update conversation timestamp
@@ -239,17 +267,19 @@ def process_financial_transaction(request):
         .set({ updatedAt: new Date() })
         .where(eq(conversations.id, conversationId));
 
-      // Get conversation history
-      const history = await db.query.messages.findMany({
-        where: eq(messages.conversationId, conversationId),
-        orderBy: [asc(messages.createdAt)],
-      });
-
-      // Format messages for Anthropic
-      const formattedMessages = history.map(msg => ({
-        role: msg.role as 'user' | 'assistant',
-        content: msg.content,
-      }));
+      // Get base prompt template
+      const basePrompt = await ContextManager.getEffectivePrompt(
+        'code_assistant_base',
+        {
+          topic: conversationContext.context.topic || "General Discussion",
+          projectContext: conversationContext.context.codeContext?.projectContext || "LedgerLink Development",
+          codePatterns: JSON.stringify(conversationContext.context.codeContext?.patterns || []),
+          conversationHistory: conversationContext.relevantHistory
+            .map(msg => `${msg.role}: ${msg.content}`)
+            .join('\n'),
+          userRequest: content
+        }
+      );
 
       // Setup SSE
       res.setHeader('Content-Type', 'text/event-stream');
@@ -257,6 +287,22 @@ def process_financial_transaction(request):
       res.setHeader('Connection', 'keep-alive');
 
       try {
+        // Format messages for Anthropic
+        const formattedMessages = [
+          {
+            role: 'system',
+            content: basePrompt
+          },
+          ...conversationContext.relevantHistory.map(msg => ({
+            role: msg.role,
+            content: msg.content,
+          })),
+          {
+            role: 'user',
+            content
+          }
+        ];
+
         const stream = await generateChatResponse(formattedMessages);
         let fullResponse = '';
 
@@ -268,30 +314,41 @@ def process_financial_transaction(request):
           }
         }
 
-        // Save assistant message
+        // Save assistant message with context snapshot
         await db.insert(messages).values({
           conversationId,
           role: "assistant",
           content: fullResponse,
+          contextSnapshot: conversationContext.context
         });
 
-        // Generate and update conversation title if it's the first message
-        if (history.length <= 1) {
-          const titleStream = await generateChatResponse([
-            { role: 'user', content: `Based on this message: "${content}", generate a very short title (max 6 words) that captures the main topic.` }
-          ]);
-
-          let title = '';
-          for await (const chunk of titleStream) {
-            if (chunk.type === 'content_block_delta') {
-              title += chunk.delta.text;
-            }
+        // Learn from the conversation and update context
+        const contextLearningPrompt = await ContextManager.getEffectivePrompt(
+          'context_learning',
+          {
+            conversationHistory: `user: ${content}\nassistant: ${fullResponse}`,
+            topic: conversationContext.context.topic,
+            entities: JSON.stringify(conversationContext.context.entities || {}),
+            codeContext: JSON.stringify(conversationContext.context.codeContext || {})
           }
+        );
 
-          await db
-            .update(conversations)
-            .set({ title: title.slice(0, 100) })
-            .where(eq(conversations.id, conversationId));
+        const contextUpdateStream = await generateChatResponse([
+          { role: 'user', content: contextLearningPrompt }
+        ]);
+
+        let contextUpdateResponse = '';
+        for await (const chunk of contextUpdateStream) {
+          if (chunk.type === 'content_block_delta') {
+            contextUpdateResponse += chunk.delta.text;
+          }
+        }
+
+        try {
+          const contextUpdates = JSON.parse(contextUpdateResponse);
+          await ContextManager.updateContext(conversationId, contextUpdates);
+        } catch (e) {
+          console.error('Failed to parse context updates:', e);
         }
 
         res.write('data: [DONE]\n\n');
