@@ -10,8 +10,12 @@ import { eq, desc, asc } from "drizzle-orm";
 import { ContextManager } from "./lib/contextManager";
 import { indexCodebase } from "./lib/codebaseIndexer";
 import { AssistantService } from './lib/assistantService';
-import { readFile, readdir } from 'fs/promises';
-import { join, extname } from 'path';
+import { readFile, readdir, writeFile, mkdir } from 'fs/promises';
+import { join, extname, dirname } from 'path';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
 
 export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
@@ -24,19 +28,60 @@ export function registerRoutes(app: Express): Server {
     console.error('Failed to index codebase:', error);
   });
 
+  // Clone repository endpoint
+  app.post("/api/codebase/clone", async (req, res) => {
+    try {
+      const { repoUrl } = req.body;
+
+      if (!repoUrl) {
+        return res.status(400).json({ error: 'Repository URL is required' });
+      }
+
+      const reposDir = join(process.cwd(), 'repositories');
+
+      // Create repositories directory if it doesn't exist
+      try {
+        await mkdir(reposDir, { recursive: true });
+      } catch (error) {
+        // Ignore if directory already exists
+      }
+
+      // Extract repo name from URL
+      const repoName = repoUrl.split('/').pop()?.replace('.git', '') || 'repository';
+      const repoPath = join(reposDir, repoName);
+
+      // Clone the repository
+      await execAsync(`git clone ${repoUrl} ${repoPath}`);
+
+      res.json({ success: true, repoName });
+    } catch (error) {
+      console.error('Error cloning repository:', error);
+      res.status(500).json({ error: 'Failed to clone repository' });
+    }
+  });
+
   // Code browser endpoints
   app.get("/api/codebase/tree", async (req, res) => {
     try {
-      // Try to read from LedgerLink codebase path first
-      const ledgerLinkPath = process.env.LEDGERLINK_PATH || '../LedgerLink';
-      const root = ledgerLinkPath;
+      const reposDir = join(process.cwd(), 'repositories');
+      let root = reposDir;
 
+      // List available repositories
       try {
-        await readdir(root);
+        const repos = await readdir(reposDir);
+        if (repos.length === 0) {
+          return res.json({
+            name: '/',
+            path: '',
+            type: 'directory',
+            children: []
+          });
+        }
+        // Use the first repository by default
+        root = join(reposDir, repos[0]);
       } catch (error) {
-        // Fallback to current directory if LedgerLink path is not accessible
-        console.warn('LedgerLink codebase not found, falling back to current directory');
-        root = process.cwd();
+        // If repositories directory doesn't exist, create it
+        await mkdir(reposDir, { recursive: true });
       }
 
       async function buildTree(dir: string): Promise<any> {
@@ -122,16 +167,17 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).json({ error: 'Path parameter is required' });
       }
 
-      // Try LedgerLink path first
-      const ledgerLinkPath = process.env.LEDGERLINK_PATH || '../LedgerLink';
-      let root = ledgerLinkPath;
+      const reposDir = join(process.cwd(), 'repositories');
+      let root = reposDir;
 
       try {
-        await readdir(root);
+        const repos = await readdir(reposDir);
+        if (repos.length > 0) {
+          // Use the first repository by default
+          root = join(reposDir, repos[0]);
+        }
       } catch (error) {
-        // Fallback to current directory if LedgerLink path is not accessible
-        console.warn('LedgerLink codebase not found, falling back to current directory');
-        root = process.cwd();
+        return res.status(404).json({ error: 'No repositories found' });
       }
 
       // Prevent directory traversal

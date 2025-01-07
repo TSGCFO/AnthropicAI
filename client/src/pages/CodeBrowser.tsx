@@ -1,11 +1,20 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Search, FileCode, Folder, ChevronRight, ChevronDown } from "lucide-react";
+import { Loader2, Search, FileCode, Folder, ChevronRight, ChevronDown, GitFork } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 interface FileNode {
   name: string;
@@ -21,6 +30,42 @@ export function CodeBrowser() {
   const [selectedFile, setSelectedFile] = useState<FileNode | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedDirs, setExpandedDirs] = useState<Set<string>>(new Set());
+  const [repoUrl, setRepoUrl] = useState("");
+  const [isCloneDialogOpen, setIsCloneDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  // Clone repository mutation
+  const cloneRepository = useMutation({
+    mutationFn: async (url: string) => {
+      const response = await fetch('/api/codebase/clone', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repoUrl: url }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to clone repository');
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/codebase/tree"] });
+      toast({
+        title: "Repository cloned",
+        description: "The repository has been successfully cloned.",
+      });
+      setIsCloneDialogOpen(false);
+      setRepoUrl("");
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to clone repository",
+      });
+    },
+  });
 
   // Query for file tree
   const { data: fileTree, isLoading } = useQuery<FileNode>({
@@ -100,7 +145,7 @@ export function CodeBrowser() {
   return (
     <div className="flex h-screen">
       <div className="w-[300px] border-r flex flex-col">
-        <div className="p-4 border-b">
+        <div className="p-4 border-b space-y-4">
           <div className="flex items-center gap-2">
             <Search className="h-4 w-4 text-muted-foreground" />
             <Input
@@ -110,6 +155,47 @@ export function CodeBrowser() {
               className="h-8"
             />
           </div>
+          <Dialog open={isCloneDialogOpen} onOpenChange={setIsCloneDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="w-full gap-2">
+                <GitFork className="h-4 w-4" />
+                Clone Repository
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Clone Repository</DialogTitle>
+                <DialogDescription>
+                  Enter the URL of the GitHub repository you want to clone.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="repo-url">Repository URL</Label>
+                  <Input
+                    id="repo-url"
+                    placeholder="https://github.com/username/repo.git"
+                    value={repoUrl}
+                    onChange={(e) => setRepoUrl(e.target.value)}
+                  />
+                </div>
+                <Button
+                  onClick={() => cloneRepository.mutate(repoUrl)}
+                  disabled={cloneRepository.isPending || !repoUrl}
+                  className="w-full"
+                >
+                  {cloneRepository.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Cloning...
+                    </>
+                  ) : (
+                    'Clone Repository'
+                  )}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
         <ScrollArea className="flex-1">
           {isLoading ? (
@@ -120,7 +206,7 @@ export function CodeBrowser() {
             <div className="p-2">{renderTree(fileTree)}</div>
           ) : (
             <div className="p-4 text-sm text-muted-foreground">
-              No files found
+              No repositories found. Clone a repository to get started.
             </div>
           )}
         </ScrollArea>
@@ -160,7 +246,7 @@ export function CodeBrowser() {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
-                Select a file from the sidebar to view its contents.
+                Select a file from the sidebar to view its contents, or clone a repository to get started.
               </p>
             </CardContent>
           </Card>
